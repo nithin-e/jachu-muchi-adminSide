@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.enquiryController = exports.authController = void 0;
+const AuthController_1 = require("../controllers/AuthController");
+const enquiry_controller_1 = require("../controllers/enquiry.controller");
+const EnquiryRepository_1 = require("../repositories/implementations/EnquiryRepository");
+const UserRepository_1 = require("../repositories/implementations/UserRepository");
+const AuthService_1 = require("../services/implementations/AuthService");
+const EnquiryService_1 = require("../services/implementations/EnquiryService");
+const TokenService_1 = require("../services/implementations/TokenService");
+const userRepository = new UserRepository_1.UserRepository();
+const tokenService = new TokenService_1.TokenService();
+const authService = new AuthService_1.AuthService(userRepository, tokenService);
+const enquiryRepository = new EnquiryRepository_1.EnquiryRepository();
+const enquiryService = new EnquiryService_1.EnquiryService(enquiryRepository);
+exports.authController = new AuthController_1.AuthController(authService);
+exports.enquiryController = new enquiry_controller_1.EnquiryController(enquiryService);

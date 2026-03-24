@@ -1,0 +1,21 @@
+import { IUserRepository } from "../interfaces/IUserRepository";
+import { AuthenticatedUser } from "../../types/auth.types";
+import { UserModel } from "../../models/User";
+
+export class UserRepository implements IUserRepository {
+  async findByEmail(email: string): Promise<AuthenticatedUser | null> {
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await UserModel.findOne({ email: normalizedEmail }).lean();
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      password: user.password,
+      role: user.role,
+    };
+  }
+}
