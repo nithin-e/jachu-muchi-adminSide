@@ -14,6 +14,7 @@ class UserRepository {
             email: user.email,
             password: user.password,
             role: user.role,
+            status: user.status,
         };
     }
 }

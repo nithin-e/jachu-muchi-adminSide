@@ -1,9 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const enquiry_controller_1 = require("../controllers/enquiry.controller");
 const dependency_injection_1 = require("../config/dependency-injection");
 const router = (0, express_1.Router)();
-router.get("/enquiries", enquiry_controller_1.getAllEnquiries);
+router.get("/enquiries", dependency_injection_1.enquiryController.listAll);
+router.get("/enquiries/filter", dependency_injection_1.enquiryController.filterEnquiries);
 router.patch("/enquiries/:id/status", dependency_injection_1.enquiryController.updateStatus);
+router.delete("/enquiries/:id", dependency_injection_1.enquiryController.deleteEnquiry);
+router.get("/enquiries/:id", dependency_injection_1.enquiryController.getById);
+router.patch("/enquiries/:id/notes", dependency_injection_1.enquiryController.updateNotes);
 exports.default = router;

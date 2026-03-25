@@ -33,11 +33,33 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserModel = void 0;
+exports.UserModel = exports.ADMIN_USER_ROLE_VALUES = exports.ADMIN_USER_STATUS_VALUES = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+exports.ADMIN_USER_STATUS_VALUES = [
+    "Active",
+    "Inactive",
+];
+exports.ADMIN_USER_ROLE_VALUES = [
+    "Admin",
+    "Sub Admin",
+    "Editor",
+];
 const userSchema = new mongoose_1.Schema({
+    name: { type: String, required: true, trim: true, default: "" },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
-    role: { type: String, default: "admin" },
+    role: { type: String, required: true, trim: true, default: "Admin" },
+    status: {
+        type: String,
+        enum: exports.ADMIN_USER_STATUS_VALUES,
+        default: "Active",
+    },
 }, { timestamps: true });
+const stripPassword = (_doc, ret) => {
+    const plain = ret;
+    const { password: _p, ...rest } = plain;
+    return rest;
+};
+userSchema.set("toJSON", { transform: stripPassword });
+userSchema.set("toObject", { transform: stripPassword });
 exports.UserModel = mongoose_1.default.model("admin", userSchema);

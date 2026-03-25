@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const AuthValidator_1 = require("../validators/AuthValidator");
+const statusCodes_1 = require("../constants/statusCodes");
 class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -11,7 +12,9 @@ class AuthController {
                 const { email, password } = req.body;
                 const validation = AuthValidator_1.AuthValidator.validateLoginInput({ email, password });
                 if (!validation.valid) {
-                    return res.status(400).json({ message: validation.message });
+                    return res.status(statusCodes_1.StatusCode.BAD_REQUEST).json({
+                        message: validation.message,
+                    });
                 }
                 const result = await this.authService.login({ email, password });
                 if (!result.ok) {

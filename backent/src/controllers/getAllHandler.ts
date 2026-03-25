@@ -1,20 +1,23 @@
 import { Request, Response, NextFunction } from "express";
 import { Model } from "mongoose";
 import { buildQuery } from "../utils/buildQuery";
+import { StatusCode } from "../constants/statusCodes";
 
 export const getAllHandler = <T>(
   model: Model<T>,
-  searchFields: string[]
+  searchFields: string[],
+  omitFields?: string[]
 ) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await buildQuery(
         model,
         req.query as Record<string, unknown>,
-        searchFields
+        searchFields,
+        omitFields
       );
 
-      return res.status(200).json({
+      return res.status(StatusCode.OK).json({
         success: true,
         data: result.data,
         total: result.total,

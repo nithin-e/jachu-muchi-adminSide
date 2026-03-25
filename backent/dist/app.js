@@ -5,12 +5,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
+const banner_routes_1 = __importDefault(require("./routes/banner.routes"));
+const article_routes_1 = __importDefault(require("./routes/article.routes"));
+const category_routes_1 = __importDefault(require("./routes/category.routes"));
 const enquiry_routes_1 = __importDefault(require("./routes/enquiry.routes"));
+const course_routes_1 = __importDefault(require("./routes/course.routes"));
+const gallery_routes_1 = __importDefault(require("./routes/gallery.routes"));
+const alumni_routes_1 = __importDefault(require("./routes/alumni.routes"));
+const branch_routes_1 = __importDefault(require("./routes/branch.routes"));
+const testimonial_routes_1 = __importDefault(require("./routes/testimonial.routes"));
+const userManagement_routes_1 = __importDefault(require("./routes/userManagement.routes"));
+const settings_routes_1 = __importDefault(require("./routes/settings.routes"));
 const cors_config_1 = require("./config/cors.config");
 const error_middleware_1 = require("./middlewares/error.middleware");
+const messages_1 = require("./constants/messages");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use("/uploads", express_1.default.static(path_1.default.join(process.cwd(), "uploads")));
 app.use((0, cors_1.default)(cors_config_1.corsOptions));
 app.options(/.*/, (0, cors_1.default)(cors_config_1.corsOptions));
 app.use((req, _res, next) => {
@@ -24,8 +37,18 @@ app.use((req, _res, next) => {
 });
 app.use("/api", auth_routes_1.default);
 app.use("/api", enquiry_routes_1.default);
+app.use("/api", course_routes_1.default);
+app.use("/api", article_routes_1.default);
+app.use("/api", category_routes_1.default);
+app.use("/api", gallery_routes_1.default);
+app.use("/api", testimonial_routes_1.default);
+app.use("/api", alumni_routes_1.default);
+app.use("/api", branch_routes_1.default);
+app.use("/api", banner_routes_1.default);
+app.use("/api", userManagement_routes_1.default);
+app.use("/api", settings_routes_1.default);
 app.get("/", (_req, res) => {
-    res.json({ message: "Backend running 🚀" });
+    res.json({ message: messages_1.MESSAGES.APP.BACKEND_RUNNING });
 });
 app.use(error_middleware_1.errorMiddleware);
 exports.default = app;

@@ -16,6 +16,7 @@ export class UserRepository implements IUserRepository {
       email: user.email,
       password: user.password,
       role: user.role,
+      status: (user as { status?: string }).status,
     };
   }
 }

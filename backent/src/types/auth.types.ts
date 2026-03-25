@@ -8,6 +8,7 @@ export interface AuthenticatedUser {
   email: string;
   password: string;
   role?: string;
+  status?: string;
 }
 
 export interface TokenPayload {

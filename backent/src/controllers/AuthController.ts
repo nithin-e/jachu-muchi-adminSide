@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { IAuthService } from "../services/interfaces/IAuthService";
 import { AuthValidator } from "../validators/AuthValidator";
+import { StatusCode } from "../constants/statusCodes";
 
 export class AuthController {
   constructor(private readonly authService: IAuthService) {}
@@ -14,7 +15,9 @@ export class AuthController {
       const validation = AuthValidator.validateLoginInput({ email, password });
 
       if (!validation.valid) {
-        return res.status(400).json({ message: validation.message });
+        return res.status(StatusCode.BAD_REQUEST).json({
+          message: validation.message,
+        });
       }
 
       const result = await this.authService.login({ email, password });

@@ -69,7 +69,8 @@ const castValueFromSchemaType = (
 export const buildQuery = async <T>(
   model: Model<T>,
   queryParams: QueryParams,
-  searchFields: string[]
+  searchFields: string[],
+  omitFields?: string[]
 ): Promise<BuildQueryResult<T>> => {
   const page = parsePage(queryParams.page);
   const limit = parseLimit(queryParams.limit);
@@ -109,8 +110,16 @@ export const buildQuery = async <T>(
     mongoQuery[key] = value;
   });
 
+  const select =
+    omitFields?.length && omitFields.length > 0
+      ? omitFields.map((f) => `-${f}`).join(" ")
+      : undefined;
+
+  const baseFind = model.find(mongoQuery).sort(sort).skip(skip).limit(limit);
+  const findQuery = select ? baseFind.select(select) : baseFind;
+
   const [data, total] = await Promise.all([
-    model.find(mongoQuery).sort(sort).skip(skip).limit(limit).lean(),
+    findQuery.lean(),
     model.countDocuments(mongoQuery),
   ]);
 

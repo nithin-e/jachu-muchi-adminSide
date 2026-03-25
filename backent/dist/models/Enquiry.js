@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EnquiryModel = exports.ENQUIRY_STATUS_VALUES = void 0;
+exports.EnquiryModel = exports.ENQUIRY_TYPE_VALUES = exports.ENQUIRY_STATUS_VALUES = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 exports.ENQUIRY_STATUS_VALUES = [
     "New",
@@ -42,14 +42,26 @@ exports.ENQUIRY_STATUS_VALUES = [
     "Converted",
     "Closed",
 ];
+exports.ENQUIRY_TYPE_VALUES = [
+    "Course Enquiry",
+    "Normal Enquiry",
+];
 const enquirySchema = new mongoose_1.Schema({
     name: { type: String, required: true, trim: true },
     phone: { type: String, required: true, trim: true },
     course: { type: String, required: true, trim: true },
+    email: { type: String, default: "", trim: true },
+    message: { type: String, default: "", trim: true },
+    type: {
+        type: String,
+        enum: exports.ENQUIRY_TYPE_VALUES,
+        default: "Course Enquiry",
+    },
     status: {
         type: String,
         enum: exports.ENQUIRY_STATUS_VALUES,
         default: "New",
     },
+    notes: { type: String, default: "", trim: true },
 }, { timestamps: true });
 exports.EnquiryModel = mongoose_1.default.model("enquiries", enquirySchema);
