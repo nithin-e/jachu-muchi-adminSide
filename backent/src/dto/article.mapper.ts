@@ -1,4 +1,4 @@
-import { ArticleStatus, ARTICLE_STATUS_VALUES } from "../models/Article";
+import { ARTICLE_STATUS, ArticleStatus, ARTICLE_STATUS_VALUES } from "../models/Article";
 import {
   CreateArticleInput,
   UpdateArticleInput,
@@ -44,8 +44,7 @@ export function mapBodyToCreateArticleInput(
     parseArticleDate(body.articleDate ?? body.date ?? body.publishedAt) ??
     new Date(NaN);
 
-  const status =
-    normalizeStatus(body.status) ?? ("Draft" as ArticleStatus);
+  const status = normalizeStatus(body.status) ?? ARTICLE_STATUS.DRAFT;
 
   const explicitUrl =
     typeof body.imageUrl === "string" ? body.imageUrl : undefined;

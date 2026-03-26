@@ -1,8 +1,16 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export const BANNER_STATUS = {
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
+} as const;
+
 export type BannerStatus = "Active" | "Inactive";
 
-export const BANNER_STATUS_VALUES: BannerStatus[] = ["Active", "Inactive"];
+export const BANNER_STATUS_VALUES: BannerStatus[] = [
+  BANNER_STATUS.ACTIVE,
+  BANNER_STATUS.INACTIVE,
+];
 
 export interface IBannerDocument extends Document {
   title: string;
@@ -18,7 +26,7 @@ const bannerSchema = new Schema<IBannerDocument>(
     status: {
       type: String,
       enum: BANNER_STATUS_VALUES,
-      default: "Active",
+      default: BANNER_STATUS.ACTIVE,
     },
     imageUrl: { type: String, required: true, trim: true },
   },

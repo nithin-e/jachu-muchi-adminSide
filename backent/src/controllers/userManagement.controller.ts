@@ -18,12 +18,14 @@ export const getAllUsers = getAllHandler<IUserDocument>(
 export class UserManagementController {
   constructor(private readonly userManagementService: IUserManagementService) {}
 
-  list = getAllUsers;
+  list(req: Request, res: Response, next: NextFunction) {
+    return getAllUsers(req, res, next);
+  }
 
   /**
    * Initial-load endpoint: returns all users without pagination.
    */
-  listAll = async (_req: Request, res: Response, next: NextFunction) => {
+  async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       const data = await UserModel.find()
         .select("-password")
@@ -36,8 +38,7 @@ export class UserManagementController {
     } catch (error) {
       return next(error);
     }
-  };
-
+  }
   /**
    * Filtering endpoint:
    * GET /api/users/filter
@@ -45,11 +46,11 @@ export class UserManagementController {
    * Query params: page, limit, search, status, type, sortBy, order
    * Mapping: `type` => `role`
    */
-  filterUsers = async (
+  async filterUsers(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     try {
       const query = req.query as Record<string, unknown>;
 
@@ -119,9 +120,8 @@ export class UserManagementController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  getById = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async getById(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -140,9 +140,8 @@ export class UserManagementController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  create = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async create(req: Request, res: Response, next: NextFunction){
     try {
       const payload = mapBodyToCreateAdminUser(
         req.body as Record<string, unknown>
@@ -157,9 +156,8 @@ export class UserManagementController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  update = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async update(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -182,9 +180,8 @@ export class UserManagementController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  delete = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async delete(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -203,5 +200,5 @@ export class UserManagementController {
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

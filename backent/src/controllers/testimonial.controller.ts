@@ -22,12 +22,14 @@ export const getAllTestimonials = getAllHandler<ITestimonialDocument>(
 export class TestimonialController {
   constructor(private readonly testimonialService: ITestimonialService) {}
 
-  list = getAllTestimonials;
+  list(req: Request, res: Response, next: NextFunction) {
+    return getAllTestimonials(req, res, next);
+  }
 
   /**
    * Initial-load endpoint: returns all testimonials with details, no pagination.
    */
-  listAll = async (_req: Request, res: Response, next: NextFunction) => {
+  async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       const data = await TestimonialModel.find().sort({ createdAt: -1 });
 
@@ -38,17 +40,16 @@ export class TestimonialController {
     } catch (error) {
       return next(error);
     }
-  };
-
+  }
   /**
    * Filtering endpoint: search + pagination + sorting + filtering.
    * GET /api/testimonials/filter
    */
-  filterTestimonials = async (
+  async filterTestimonials(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     try {
       const query = req.query as Record<string, unknown>;
 
@@ -118,9 +119,8 @@ export class TestimonialController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  getById = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async getById(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -139,9 +139,8 @@ export class TestimonialController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  create = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async create(req: Request, res: Response, next: NextFunction){
     try {
       const file = req.file;
       let profileImageUrl: string | undefined;
@@ -165,9 +164,8 @@ export class TestimonialController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  update = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async update(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -199,9 +197,8 @@ export class TestimonialController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  delete = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async delete(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -220,5 +217,5 @@ export class TestimonialController {
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

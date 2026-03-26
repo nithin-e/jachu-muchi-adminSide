@@ -1,9 +1,13 @@
 import { Router } from "express";
-import { categoryController } from "../config/dependency-injection";
-import { CategoryRouteRegistry } from "./CategoryRouteRegistry";
+import { categoryController } from "../config/injections/category.injection";
 
 const router = Router();
 
-new CategoryRouteRegistry(categoryController).register(router);
+router.get("/all", categoryController.listAll.bind(categoryController));
+router.get("/filter", categoryController.filterCategories.bind(categoryController));
+router.get("/", categoryController.list.bind(categoryController));
+router.post("/", categoryController.create.bind(categoryController));
+router.put("/:id", categoryController.update.bind(categoryController));
+router.delete("/:id", categoryController.delete.bind(categoryController));
 
 export default router;

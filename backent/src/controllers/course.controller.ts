@@ -62,7 +62,7 @@ function mapBodyToCreateInput(
       : explicitUrl?.trim()
         ? { imageUrl: explicitUrl.trim() }
         : {}),
-  };
+  }
 }
 
 export class CourseController {
@@ -72,7 +72,7 @@ export class CourseController {
    * Initial-load endpoint: returns all courses with details, no pagination.
    * GET /api/courses/all
    */
-  listAll = async (_req: Request, res: Response, next: NextFunction) => {
+  async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       const data: ICourseDocument[] = await CourseModel.find()
         .sort({ createdAt: -1 })
@@ -85,17 +85,16 @@ export class CourseController {
     } catch (error) {
       return next(error);
     }
-  };
-
+  }
   /**
    * Filtering endpoint: search + pagination + sorting + filtering.
    * GET /api/courses/filter
    */
-  filterCourses = async (
+  async filterCourses(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     try {
       const query = req.query as Record<string, unknown>;
 
@@ -163,9 +162,8 @@ export class CourseController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  update = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async update(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -197,9 +195,8 @@ export class CourseController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  delete = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async delete(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -218,9 +215,8 @@ export class CourseController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  create = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async create(req: Request, res: Response, next: NextFunction){
     try {
       const file = req.file;
       let imageUrl: string | undefined;
@@ -244,12 +240,11 @@ export class CourseController {
     } catch (error) {
       return next(error);
     }
-  };
-
+  }
   /**
    * PATCH /courses/:id/image — multipart field `courseImage` (PNG/JPG).
    */
-  uploadImage = async (req: Request, res: Response, next: NextFunction) => {
+  async uploadImage(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -278,12 +273,11 @@ export class CourseController {
     } catch (error) {
       return next(error);
     }
-  };
-
+  }
   /**
    * DELETE /courses/:id/image — removes image only; course row stays.
    */
-  deleteImage = async (req: Request, res: Response, next: NextFunction) => {
+  async deleteImage(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -303,5 +297,5 @@ export class CourseController {
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

@@ -1,13 +1,16 @@
+import { HttpStatusCode } from "axios";
+import type { StatusCodeType } from "../types/status-code.types";
+
 export const StatusCode = {
-  OK: 200,
-  CREATED: 201,
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  INTERNAL_SERVER_ERROR: 500,
+  OK: HttpStatusCode.Ok,
+  CREATED: HttpStatusCode.Created,
+  BAD_REQUEST: HttpStatusCode.BadRequest,
+  UNAUTHORIZED: HttpStatusCode.Unauthorized,
+  FORBIDDEN: HttpStatusCode.Forbidden,
+  NOT_FOUND: HttpStatusCode.NotFound,
+  TOO_MANY_REQUESTS: HttpStatusCode.TooManyRequests,
+  INTERNAL_SERVER_ERROR: HttpStatusCode.InternalServerError,
 } as const;
 
-export type StatusCodeType =
-  (typeof StatusCode)[keyof typeof StatusCode];
+export type { StatusCodeType };
 

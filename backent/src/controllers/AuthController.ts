@@ -1,33 +1,24 @@
 import { NextFunction, Request, Response } from "express";
 import { IAuthService } from "../services/interfaces/IAuthService";
-import { AuthValidator } from "../validators/AuthValidator";
 import { StatusCode } from "../constants/statusCodes";
 
 export class AuthController {
   constructor(private readonly authService: IAuthService) {}
 
-  login = async (req: Request, res: Response, next: NextFunction) => {
+  async login(req: Request, res: Response, next: NextFunction){
     try {
-  
-      console.log(`broooooooooooooo.......... pid=${process.pid}`);
-      
       const { email, password } = req.body;
-      const validation = AuthValidator.validateLoginInput({ email, password });
-
-      if (!validation.valid) {
-        return res.status(StatusCode.BAD_REQUEST).json({
-          message: validation.message,
+      const result = await this.authService.login({ email, password });
+      if (!result.ok) {
+        return res.status(result.status).json({
+          success: false,
+          message: result.message,
         });
       }
 
-      const result = await this.authService.login({ email, password });
-      if (!result.ok) {
-        return res.status(result.status).json({ message: result.message });
-      }
-
-      return res.json(result.data);
+      return res.status(StatusCode.OK).json(result.data);
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

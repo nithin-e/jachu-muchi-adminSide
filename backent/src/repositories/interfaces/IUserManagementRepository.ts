@@ -1,17 +1,17 @@
-import { AdminUserStatus, IUserDocument } from "../../models/User";
+import { AdminUserRole, AdminUserStatus, IUserDocument } from "../../models/User";
 
 export interface CreateUserDbPayload {
   name: string;
   email: string;
   password: string;
-  role: string;
+  role: AdminUserRole;
   status: AdminUserStatus;
 }
 
 export interface UpdateUserDbPayload {
   name: string;
   email: string;
-  role: string;
+  role: AdminUserRole;
   status: AdminUserStatus;
   password?: string;
 }

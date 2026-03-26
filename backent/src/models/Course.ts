@@ -1,7 +1,15 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export const COURSE_STATUS = {
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
+} as const;
+
 export type CourseStatus = "Active" | "Inactive";
-export const COURSE_STATUS_VALUES: CourseStatus[] = ["Active", "Inactive"];
+export const COURSE_STATUS_VALUES: CourseStatus[] = [
+  COURSE_STATUS.ACTIVE,
+  COURSE_STATUS.INACTIVE,
+];
 
 export interface ICourseDocument extends Document {
   name: string;
@@ -25,7 +33,7 @@ const courseSchema = new Schema<ICourseDocument>(
     status: {
       type: String,
       enum: COURSE_STATUS_VALUES,
-      default: "Active",
+      default: COURSE_STATUS.ACTIVE,
     },
     imageUrl: { type: String, trim: true, default: undefined },
   },

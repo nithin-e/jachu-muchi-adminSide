@@ -19,12 +19,14 @@ export const getAllBanners = getAllHandler<IBannerDocument>(BannerModel, [
 export class BannerController {
   constructor(private readonly bannerService: IBannerService) {}
 
-  list = getAllBanners;
+  list(req: Request, res: Response, next: NextFunction) {
+    return getAllBanners(req, res, next);
+  }
 
   /**
    * Initial-load endpoint: returns all banners with details, no pagination.
    */
-  listAll = async (_req: Request, res: Response, next: NextFunction) => {
+  async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       const data = await BannerModel.find().sort({ createdAt: -1 });
 
@@ -35,9 +37,8 @@ export class BannerController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  getById = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async getById(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -56,9 +57,8 @@ export class BannerController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  create = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async create(req: Request, res: Response, next: NextFunction){
     try {
       const file = req.file;
       let imageUrl: string | undefined;
@@ -82,9 +82,8 @@ export class BannerController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  update = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async update(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -116,9 +115,8 @@ export class BannerController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  delete = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async delete(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -137,5 +135,5 @@ export class BannerController {
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { courseImageUpload } from "../../config/multer.course";
-import { HttpAppError } from "../../utils/httpErrors";
+import { HttpAppError } from "../../types/http-error.types";
 import { ICourseUploadMiddleware } from "../interfaces/ICourseUploadMiddleware";
 
 /**
@@ -9,7 +9,7 @@ import { ICourseUploadMiddleware } from "../interfaces/ICourseUploadMiddleware";
 export class CourseUploadMiddleware implements ICourseUploadMiddleware {
   private readonly fieldName = "courseImage";
 
-  handle = (req: Request, res: Response, next: NextFunction): void => {
+  handle(req: Request, res: Response, next: NextFunction): void {
     courseImageUpload.single(this.fieldName)(req, res, (err: unknown) => {
       if (err) {
         const e = err as HttpAppError;
@@ -18,5 +18,5 @@ export class CourseUploadMiddleware implements ICourseUploadMiddleware {
       }
       next();
     });
-  };
+  }
 }

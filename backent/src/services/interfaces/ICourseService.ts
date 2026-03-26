@@ -1,5 +1,5 @@
 import { CreateCourseInput, UpdateCourseInput } from "../../types/course.types";
-import { ICourseDocument } from "../../models/Course";
+import { CourseStatus, ICourseDocument } from "../../models/Course";
 
 export interface ICourseService {
   createCourse(input: CreateCourseInput): Promise<ICourseDocument>;
@@ -20,7 +20,7 @@ export interface ICourseService {
     page: number;
     limit: number;
     search?: string;
-    status?: "Active" | "Inactive" | string;
+    status?: CourseStatus | string;
     type?: string;
     sortBy?: string;
     order?: "asc" | "desc";

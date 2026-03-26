@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { settingsController } from "../config/dependency-injection";
+import { settingsController } from "../config/injections/settings.injection";
 
 const router = Router();
 
-router.get("/settings", settingsController.get.bind(settingsController));
-router.put("/settings", settingsController.save.bind(settingsController));
+router.get("/", settingsController.get.bind(settingsController));
+router.put("/", settingsController.save.bind(settingsController));
 
 export default router;

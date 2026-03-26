@@ -1,5 +1,6 @@
-import express from "express";
+import express, { Application } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import path from "path";
 import authRoutes from "./routes/auth.routes";
 import bannerRoutes from "./routes/banner.routes";
@@ -14,46 +15,59 @@ import testimonialRoutes from "./routes/testimonial.routes";
 import userManagementRoutes from "./routes/userManagement.routes";
 import settingsRoutes from "./routes/settings.routes";
 import { corsOptions } from "./config/cors.config";
+import { authenticateToken } from "./middlewares/auth.middleware";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { logRequest } from "./middlewares/logger.middleware";
+import { rateLimit } from "./middlewares/rate-limit.middleware";
 import { MESSAGES } from "./constants/messages";
 
-const app = express();
+class AppServer {
+  public app: Application;
 
-app.use(express.json());
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "uploads"))
-);
-app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+  constructor() {
+    this.app = express();
+    this.loadMiddlewares();
+    this.loadRoutes();
+    this.loadErrorHandling();
+  }
 
-app.use((req, _res, next) => {
-  console.log("----- Incoming Request -----");
-  console.log("Method :", req.method);
-  console.log("URL    :", req.originalUrl);
-  console.log("Time   :", new Date().toLocaleString());
-  console.log("Body   :", req.body);
-  console.log("----------------------------");
-  next();
-});
+  private loadMiddlewares(): void {
+    this.app.use(helmet());
+    this.app.use(rateLimit);
+    this.app.use(express.json({ limit: "10mb" }));
+    this.app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+    this.app.use(logRequest);
+    this.app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+    this.app.use(cors(corsOptions));
+    this.app.options(/.*/, cors(corsOptions));
+  }
 
-app.use("/api", authRoutes);
-app.use("/api", enquiryRoutes);
-app.use("/api", courseRoutes);
-app.use("/api", articleRoutes);
-app.use("/api", categoryRoutes);
-app.use("/api", galleryRoutes);
-app.use("/api", testimonialRoutes);
-app.use("/api", alumniRoutes);
-app.use("/api", branchRoutes);
-app.use("/api", bannerRoutes);
-app.use("/api", userManagementRoutes);
-app.use("/api", settingsRoutes);
+  private loadRoutes(): void {
+    this.app.use("/api/auth", authRoutes);
+    this.app.use("/api/enquiries", authenticateToken, enquiryRoutes);
+    this.app.use("/api/courses", authenticateToken, courseRoutes);
+    this.app.use("/api/articles", authenticateToken, articleRoutes);
+    this.app.use("/api/categories", authenticateToken, categoryRoutes);
+    this.app.use("/api/gallery", authenticateToken, galleryRoutes);
+    this.app.use("/api/testimonials", authenticateToken, testimonialRoutes);
+    this.app.use("/api/alumni", authenticateToken, alumniRoutes);
+    this.app.use("/api/branches", authenticateToken, branchRoutes);
+    this.app.use("/api/banners", authenticateToken, bannerRoutes);
+    this.app.use("/api/users", authenticateToken, userManagementRoutes);
+    this.app.use("/api/settings", authenticateToken, settingsRoutes);
 
-app.get("/", (_req, res) => {
-  res.json({ message: MESSAGES.APP.BACKEND_RUNNING });
-});
+    this.app.get("/", (_req, res) => {
+      res.json({ message: MESSAGES.APP.BACKEND_RUNNING });
+    });
+  }
 
-app.use(errorMiddleware);
+  private loadErrorHandling(): void {
+    this.app.use(errorMiddleware);
+  }
 
-export default app;
+  public getServer(): Application {
+    return this.app;
+  }
+}
+
+export default AppServer;

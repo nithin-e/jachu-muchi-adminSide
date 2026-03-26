@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { enquiryController } from "../config/dependency-injection";
+import { enquiryController } from "../config/injections/enquiry.injection";
 
 const router = Router();
 
-router.get("/enquiries", enquiryController.listAll);
-router.get("/enquiries/filter", enquiryController.filterEnquiries);
-router.patch("/enquiries/:id/status", enquiryController.updateStatus);
-router.delete("/enquiries/:id", enquiryController.deleteEnquiry);
-router.get("/enquiries/:id", enquiryController.getById);
-router.patch("/enquiries/:id/notes", enquiryController.updateNotes);
+router.get("/", enquiryController.listAll.bind(enquiryController));
+router.get("/filter", enquiryController.filterEnquiries.bind(enquiryController));
+router.patch("/:id/status", enquiryController.updateStatus.bind(enquiryController));
+router.delete("/:id", enquiryController.deleteEnquiry.bind(enquiryController));
+router.get("/:id", enquiryController.getById.bind(enquiryController));
+router.patch("/:id/notes", enquiryController.updateNotes.bind(enquiryController));
 
 export default router;

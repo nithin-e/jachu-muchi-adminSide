@@ -10,7 +10,7 @@ import { MESSAGES } from "../constants/messages";
 export class SettingsController {
   constructor(private readonly settingsService: ISettingsService) {}
 
-  get = async (req: Request, res: Response, next: NextFunction) => {
+  async get(req: Request, res: Response, next: NextFunction){
     try {
       const doc = await this.settingsService.getSettings();
       const data = toPublicSettings({
@@ -26,9 +26,8 @@ export class SettingsController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  save = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async save(req: Request, res: Response, next: NextFunction){
     try {
       const payload = mapBodyToSaveSettingsInput(
         req.body as Record<string, unknown>
@@ -49,5 +48,5 @@ export class SettingsController {
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

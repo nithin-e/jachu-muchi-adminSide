@@ -1,9 +1,17 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { MESSAGES } from "../constants/messages";
 
+export const BRANCH_STATUS = {
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
+} as const;
+
 export type BranchStatus = "Active" | "Inactive";
 
-export const BRANCH_STATUS_VALUES: BranchStatus[] = ["Active", "Inactive"];
+export const BRANCH_STATUS_VALUES: BranchStatus[] = [
+  BRANCH_STATUS.ACTIVE,
+  BRANCH_STATUS.INACTIVE,
+];
 
 export interface IBranchDocument extends Document {
   name: string;
@@ -34,7 +42,7 @@ const branchSchema = new Schema<IBranchDocument>(
     status: {
       type: String,
       enum: BRANCH_STATUS_VALUES,
-      default: "Active",
+      default: BRANCH_STATUS.ACTIVE,
     },
   },
   { timestamps: true }
