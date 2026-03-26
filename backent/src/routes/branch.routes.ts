@@ -1,9 +1,14 @@
 import { Router } from "express";
-import { branchController } from "../config/dependency-injection";
-import { BranchRouteRegistry } from "./BranchRouteRegistry";
+import { branchController } from "../config/injections/branch.injection";
 
 const router = Router();
 
-new BranchRouteRegistry(branchController).register(router);
+router.get("/all", branchController.listAll.bind(branchController));
+router.get("/filter", branchController.filterBranches.bind(branchController));
+router.get("/", branchController.list.bind(branchController));
+router.get("/:id", branchController.getById.bind(branchController));
+router.post("/", branchController.create.bind(branchController));
+router.put("/:id", branchController.update.bind(branchController));
+router.delete("/:id", branchController.delete.bind(branchController));
 
 export default router;

@@ -1,10 +1,10 @@
-import { BranchStatus, BRANCH_STATUS_VALUES } from "../models/Branch";
+import { BRANCH_STATUS, BranchStatus, BRANCH_STATUS_VALUES } from "../models/Branch";
 import { CreateBranchInput, UpdateBranchInput } from "../types/branch.types";
 
 function normalizeStatus(raw: unknown): BranchStatus {
-  if (typeof raw !== "string" || !raw.trim()) return "Active";
+  if (typeof raw !== "string" || !raw.trim()) return BRANCH_STATUS.ACTIVE;
   const s = raw.trim() as BranchStatus;
-  return BRANCH_STATUS_VALUES.includes(s) ? s : "Active";
+  return BRANCH_STATUS_VALUES.includes(s) ? s : BRANCH_STATUS.ACTIVE;
 }
 
 function parsePhoneNumbers(body: Record<string, unknown>): string[] {

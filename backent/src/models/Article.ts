@@ -1,8 +1,16 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export const ARTICLE_STATUS = {
+  PUBLISHED: "Published",
+  DRAFT: "Draft",
+} as const;
+
 export type ArticleStatus = "Published" | "Draft";
 
-export const ARTICLE_STATUS_VALUES: ArticleStatus[] = ["Published", "Draft"];
+export const ARTICLE_STATUS_VALUES: ArticleStatus[] = [
+  ARTICLE_STATUS.PUBLISHED,
+  ARTICLE_STATUS.DRAFT,
+];
 
 export interface IArticleDocument extends Document {
   title: string;
@@ -22,7 +30,7 @@ const articleSchema = new Schema<IArticleDocument>(
     status: {
       type: String,
       enum: ARTICLE_STATUS_VALUES,
-      default: "Draft",
+      default: ARTICLE_STATUS.DRAFT,
     },
     imageUrl: { type: String, trim: true },
   },

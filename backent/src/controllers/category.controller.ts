@@ -22,12 +22,14 @@ function mapBodyToName(body: Record<string, unknown>): string {
 export class CategoryController {
   constructor(private readonly categoryService: ICategoryService) {}
 
-  list = getAllCategories;
+  list(req: Request, res: Response, next: NextFunction) {
+    return getAllCategories(req, res, next);
+  }
 
   /**
    * Initial-load endpoint: returns all categories with details, no pagination.
    */
-  listAll = async (_req: Request, res: Response, next: NextFunction) => {
+  async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       const data = await CategoryModel.find()
         .select("-nameKey")
@@ -40,17 +42,16 @@ export class CategoryController {
     } catch (error) {
       return next(error);
     }
-  };
-
+  }
   /**
    * Filtering endpoint (search + pagination + sorting + filtering)
    * GET /api/categories/filter
    */
-  filterCategories = async (
+  async filterCategories(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     try {
       const query = req.query as Record<string, unknown>;
 
@@ -120,9 +121,8 @@ export class CategoryController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  create = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async create(req: Request, res: Response, next: NextFunction){
     try {
       const name = mapBodyToName(req.body as Record<string, unknown>);
       const category = await this.categoryService.createCategory({ name });
@@ -135,9 +135,8 @@ export class CategoryController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  update = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async update(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -158,9 +157,8 @@ export class CategoryController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  delete = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async delete(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -179,5 +177,5 @@ export class CategoryController {
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

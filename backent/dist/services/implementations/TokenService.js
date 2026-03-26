@@ -7,19 +7,25 @@ exports.TokenService = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class TokenService {
     generateAccessToken(payload) {
-        if (!process.env.ACCESS_TOKEN_SECRET) {
+        const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+        if (!accessTokenSecret) {
             throw new Error("ACCESS_TOKEN_SECRET is missing");
         }
-        return jsonwebtoken_1.default.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: "1m",
+        const accessTokenExpiresIn = (process.env.ACCESS_TOKEN_EXPIRES_IN ||
+            "15m");
+        return jsonwebtoken_1.default.sign(payload, accessTokenSecret, {
+            expiresIn: accessTokenExpiresIn,
         });
     }
     generateRefreshToken(payload) {
-        if (!process.env.REFRESH_TOKEN_SECRET) {
+        const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+        if (!refreshTokenSecret) {
             throw new Error("REFRESH_TOKEN_SECRET is missing");
         }
-        return jsonwebtoken_1.default.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: "20m",
+        const refreshTokenExpiresIn = (process.env.REFRESH_TOKEN_EXPIRES_IN ||
+            "7d");
+        return jsonwebtoken_1.default.sign(payload, refreshTokenSecret, {
+            expiresIn: refreshTokenExpiresIn,
         });
     }
 }

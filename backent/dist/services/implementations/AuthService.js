@@ -13,7 +13,6 @@ class AuthService {
     }
     async login(payload) {
         const user = await this.userRepository.findByEmail(payload.email);
-        console.log("User>>>>>>:", user);
         if (!user) {
             return { ok: false, status: 401, message: messages_1.MESSAGES.AUTH.USER_NOT_FOUND };
         }

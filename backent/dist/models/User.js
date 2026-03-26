@@ -33,26 +33,41 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserModel = exports.ADMIN_USER_ROLE_VALUES = exports.ADMIN_USER_STATUS_VALUES = void 0;
+exports.UserModel = exports.ADMIN_USER_ROLE_VALUES = exports.ADMIN_USER_ROLE = exports.ADMIN_USER_STATUS_VALUES = exports.ADMIN_USER_STATUS = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+exports.ADMIN_USER_STATUS = {
+    ACTIVE: "Active",
+    INACTIVE: "Inactive",
+};
 exports.ADMIN_USER_STATUS_VALUES = [
-    "Active",
-    "Inactive",
+    exports.ADMIN_USER_STATUS.ACTIVE,
+    exports.ADMIN_USER_STATUS.INACTIVE,
 ];
+/** Display roles used in the admin UI (legacy rows may still use lowercase e.g. admin). */
+exports.ADMIN_USER_ROLE = {
+    ADMIN: "Admin",
+    SUB_ADMIN: "Sub Admin",
+    EDITOR: "Editor",
+};
 exports.ADMIN_USER_ROLE_VALUES = [
-    "Admin",
-    "Sub Admin",
-    "Editor",
+    exports.ADMIN_USER_ROLE.ADMIN,
+    exports.ADMIN_USER_ROLE.SUB_ADMIN,
+    exports.ADMIN_USER_ROLE.EDITOR,
 ];
 const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true, trim: true, default: "" },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, trim: true, default: "Admin" },
+    role: {
+        type: String,
+        required: true,
+        trim: true,
+        default: exports.ADMIN_USER_ROLE.ADMIN,
+    },
     status: {
         type: String,
         enum: exports.ADMIN_USER_STATUS_VALUES,
-        default: "Active",
+        default: exports.ADMIN_USER_STATUS.ACTIVE,
     },
 }, { timestamps: true });
 const stripPassword = (_doc, ret) => {
@@ -62,4 +77,4 @@ const stripPassword = (_doc, ret) => {
 };
 userSchema.set("toJSON", { transform: stripPassword });
 userSchema.set("toObject", { transform: stripPassword });
-exports.UserModel = mongoose_1.default.model("admin", userSchema);
+exports.UserModel = mongoose_1.default.model("admins", userSchema);

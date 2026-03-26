@@ -11,7 +11,7 @@ export class EnquiryController {
    * Initial-load endpoint: return all enquiry details (no pagination).
    * GET /api/enquiries
    */
-  listAll = async (_req: Request, res: Response, next: NextFunction) => {
+  async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       const data = await this.enquiryService.getAllEnquiries();
       return res.status(StatusCode.OK).json({
@@ -21,9 +21,8 @@ export class EnquiryController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  updateStatus = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async updateStatus(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       const { status } = req.body as { status?: unknown };
@@ -55,13 +54,12 @@ export class EnquiryController {
     } catch (error) {
       return next(error);
     }
-  };
-
+  }
   /**
    * Filtering endpoint (search + pagination + sorting + filtering)
    * GET /api/enquiries/filter
    */
-  filterEnquiries = async (req: Request, res: Response, next: NextFunction) => {
+  async filterEnquiries(req: Request, res: Response, next: NextFunction){
     try {
       const query = req.query as Record<string, unknown>;
 
@@ -129,9 +127,8 @@ export class EnquiryController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  deleteEnquiry = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async deleteEnquiry(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -150,9 +147,8 @@ export class EnquiryController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  getById = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async getById(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -171,9 +167,8 @@ export class EnquiryController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  updateNotes = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async updateNotes(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -206,5 +201,5 @@ export class EnquiryController {
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

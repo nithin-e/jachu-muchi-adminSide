@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Model } from "mongoose";
-import { buildQuery } from "../utils/buildQuery";
+import { buildQuery } from "../utils/build-query.helper";
 import { StatusCode } from "../constants/statusCodes";
 
 export const getAllHandler = <T>(

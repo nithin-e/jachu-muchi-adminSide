@@ -1,14 +1,22 @@
 import dotenv from "dotenv";
-import app from "./app";
+import AppServer from "./app";
 import { connectDB } from "./config/mongo.config";
 
-dotenv.config({ quiet: true });
-dotenv.config({ path: "src/.env", quiet: true });
+dotenv.config();
+dotenv.config({ path: "src/.env" });
 
 const PORT = Number(process.env.PORT) || 5001;
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
+const startServer = async () => {
+  try {
+    await connectDB();
+    const server = new AppServer().getServer();
+    server.listen(PORT);
     console.log(`Server running on port ${PORT}`);
-  });
-});
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
+
+void startServer();

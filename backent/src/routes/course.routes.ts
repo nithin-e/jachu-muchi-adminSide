@@ -2,13 +2,28 @@ import { Router } from "express";
 import {
   courseController,
   courseUploadMiddleware,
-} from "../config/dependency-injection";
-import { CourseRouteRegistry } from "./CourseRouteRegistry";
+} from "../config/injections/course.injection";
 
 const router = Router();
 
-new CourseRouteRegistry(courseController, courseUploadMiddleware).register(
-  router
+router.get("/all", courseController.listAll.bind(courseController));
+router.get("/filter", courseController.filterCourses.bind(courseController));
+router.post(
+  "/",
+  courseUploadMiddleware.handle.bind(courseUploadMiddleware),
+  courseController.create.bind(courseController)
 );
+router.patch(
+  "/:id/image",
+  courseUploadMiddleware.handle.bind(courseUploadMiddleware),
+  courseController.uploadImage.bind(courseController)
+);
+router.put(
+  "/:id",
+  courseUploadMiddleware.handle.bind(courseUploadMiddleware),
+  courseController.update.bind(courseController)
+);
+router.delete("/:id/image", courseController.deleteImage.bind(courseController));
+router.delete("/:id", courseController.delete.bind(courseController));
 
 export default router;

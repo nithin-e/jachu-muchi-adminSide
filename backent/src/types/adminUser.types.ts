@@ -1,9 +1,9 @@
-import { AdminUserStatus } from "../models/User";
+import { AdminUserRole, AdminUserStatus } from "../models/User";
 
 export interface CreateAdminUserInput {
   name: string;
   email: string;
-  role: string;
+  role: AdminUserRole;
   status: AdminUserStatus;
   password: string;
 }
@@ -11,7 +11,7 @@ export interface CreateAdminUserInput {
 export interface UpdateAdminUserInput {
   name: string;
   email: string;
-  role: string;
+  role: AdminUserRole;
   status: AdminUserStatus;
   /** Plain text; if omitted, password is unchanged. */
   password?: string;

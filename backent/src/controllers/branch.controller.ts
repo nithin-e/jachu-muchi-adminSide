@@ -18,12 +18,14 @@ export const getAllBranches = getAllHandler<IBranchDocument>(BranchModel, [
 export class BranchController {
   constructor(private readonly branchService: IBranchService) {}
 
-  list = getAllBranches;
+  list(req: Request, res: Response, next: NextFunction) {
+    return getAllBranches(req, res, next);
+  }
 
   /**
    * Initial-load endpoint: returns all branches with details, no pagination.
    */
-  listAll = async (_req: Request, res: Response, next: NextFunction) => {
+  async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       const data = await BranchModel.find().sort({ createdAt: -1 });
 
@@ -34,17 +36,16 @@ export class BranchController {
     } catch (error) {
       return next(error);
     }
-  };
-
+  }
   /**
    * Filtering endpoint: search + pagination + sorting + filtering.
    * GET /api/branches/filter
    */
-  filterBranches = async (
+  async filterBranches(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     try {
       const query = req.query as Record<string, unknown>;
 
@@ -114,9 +115,8 @@ export class BranchController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  getById = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async getById(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -135,9 +135,8 @@ export class BranchController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  create = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async create(req: Request, res: Response, next: NextFunction){
     try {
       const payload = mapBodyToCreateBranchInput(
         req.body as Record<string, unknown>
@@ -152,9 +151,8 @@ export class BranchController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  update = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async update(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -177,9 +175,8 @@ export class BranchController {
     } catch (error) {
       return next(error);
     }
-  };
-
-  delete = async (req: Request, res: Response, next: NextFunction) => {
+  }
+  async delete(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;
       if (typeof id !== "string" || !id.trim()) {
@@ -198,5 +195,5 @@ export class BranchController {
     } catch (error) {
       return next(error);
     }
-  };
+  }
 }

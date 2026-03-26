@@ -27,7 +27,7 @@ export const MESSAGES = {
   },
 
   AUTHZ: {
-    // Reserved for future authorization messages
+    INVALID_TOKEN: "Invalid or expired token",
   },
 
   COURSE: {

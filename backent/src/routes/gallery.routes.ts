@@ -7,8 +7,8 @@ import {
 
 const router = Router();
 
-router.get("/gallery/all", getAllGalleryInitial);
-router.get("/gallery/filter", filterGallery);
-router.get("/gallery", getAllGallery);
+router.get("/all", getAllGalleryInitial);
+router.get("/filter", filterGallery);
+router.get("/", getAllGallery);
 
 export default router;

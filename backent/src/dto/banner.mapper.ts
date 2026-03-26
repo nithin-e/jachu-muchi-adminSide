@@ -1,10 +1,10 @@
-import { BannerStatus, BANNER_STATUS_VALUES } from "../models/Banner";
+import { BANNER_STATUS, BannerStatus, BANNER_STATUS_VALUES } from "../models/Banner";
 import { CreateBannerInput, UpdateBannerInput } from "../types/banner.types";
 
 function normalizeStatus(raw: unknown): BannerStatus {
-  if (typeof raw !== "string" || !raw.trim()) return "Active";
+  if (typeof raw !== "string" || !raw.trim()) return BANNER_STATUS.ACTIVE;
   const s = raw.trim() as BannerStatus;
-  return BANNER_STATUS_VALUES.includes(s) ? s : "Active";
+  return BANNER_STATUS_VALUES.includes(s) ? s : BANNER_STATUS.ACTIVE;
 }
 
 export function mapBodyToCreateBannerInput(
