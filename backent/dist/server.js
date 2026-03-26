@@ -4,21 +4,37 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
+const dns_1 = __importDefault(require("dns"));
+const path_1 = __importDefault(require("path"));
 const app_1 = __importDefault(require("./app"));
 const mongo_config_1 = require("./config/mongo.config");
-dotenv_1.default.config();
-dotenv_1.default.config({ path: "src/.env" });
+const envPath = path_1.default.resolve(process.cwd(), ".env");
+const envResult = dotenv_1.default.config({ path: envPath, quiet: true });
+if (envResult.error) {
+    console.error(`[ENV] Could not load environment file at ${envPath}`);
+    console.error("[ENV] Please create a .env file in the backend root folder.");
+}
+else {
+    console.log(`[ENV] Loaded environment variables from ${envPath}`);
+}
+console.log(`[ENV] Mongo URI available: ${Boolean(process.env.MONGO_URI || process.env.MONGO_URL)}`);
+const dnsServers = (process.env.DNS_SERVERS || "")
+    .split(",")
+    .map((server) => server.trim())
+    .filter(Boolean);
+if (dnsServers.length > 0) {
+    dns_1.default.setServers(dnsServers);
+    console.log(`[ENV] Using custom DNS servers: ${dnsServers.join(", ")}`);
+}
 const PORT = Number(process.env.PORT) || 5001;
 const startServer = async () => {
-    try {
-        await (0, mongo_config_1.connectDB)();
-        const server = new app_1.default().getServer();
-        server.listen(PORT);
-        console.log(`Server running on port ${PORT}`);
+    const isDbConnected = await (0, mongo_config_1.connectDB)();
+    if (!isDbConnected) {
+        console.error("[Server] Startup halted due to database configuration/connection error.");
+        return;
     }
-    catch (error) {
-        console.error(error);
-        process.exit(1);
-    }
+    const server = new app_1.default().getServer();
+    server.listen(PORT);
+    console.log(`Server running on port ${PORT}`);
 };
 void startServer();
