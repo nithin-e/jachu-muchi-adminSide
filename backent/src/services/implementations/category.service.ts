@@ -111,8 +111,8 @@ export class CategoryService implements ICategoryService {
       search,
       status,
       type,
-      sortBy,
-      order,
+      sortBy: sortBy ?? "date",
+      order: order ?? "desc",
     });
   }
 }

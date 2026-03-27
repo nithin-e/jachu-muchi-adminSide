@@ -251,7 +251,7 @@ export class CourseService implements ICourseService {
       search,
       status: normalizedStatus,
       type,
-      sortBy,
+      sortBy: sortBy ?? "date",
       order,
     });
   }

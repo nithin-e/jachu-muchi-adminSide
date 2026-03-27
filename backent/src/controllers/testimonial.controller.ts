@@ -10,37 +10,78 @@ import {
   TestimonialModel,
 } from "../models/Testimonial";
 import { ITestimonialService } from "../services/interfaces/ITestimonialService";
-import { getAllHandler } from "./getAllHandler";
 import { StatusCode } from "../constants/statusCodes";
 import { MESSAGES } from "../constants/messages";
-
-export const getAllTestimonials = getAllHandler<ITestimonialDocument>(
-  TestimonialModel,
-  ["name", "course", "message"]
-);
 
 export class TestimonialController {
   constructor(private readonly testimonialService: ITestimonialService) {}
 
   list(req: Request, res: Response, next: NextFunction) {
-    return getAllTestimonials(req, res, next);
+    return this.listAll(req, res, next);
   }
 
   /**
    * Initial-load endpoint: returns all testimonials with details, no pagination.
    */
-  async listAll(_req: Request, res: Response, next: NextFunction){
+  private parseFilterQuery(query: Record<string, unknown>) {
+    const pageRaw = query.page;
+    const limitRaw = query.limit;
+    const searchRaw = query.search;
+    const statusRaw = query.status;
+    const typeRaw = query.type;
+    const sortByRaw = query.sortBy;
+    const orderRaw = query.order;
+
+    const page =
+      typeof pageRaw === "string" && pageRaw.trim()
+        ? Number(pageRaw)
+        : 1;
+    const limit =
+      typeof limitRaw === "string" && limitRaw.trim()
+        ? Number(limitRaw)
+        : 10;
+
+    const search =
+      typeof searchRaw === "string" ? searchRaw : undefined;
+    const status =
+      typeof statusRaw === "string" && statusRaw.trim()
+        ? statusRaw.trim()
+        : undefined;
+    const type =
+      typeof typeRaw === "string" && typeRaw.trim() ? typeRaw.trim() : undefined;
+    const sortBy =
+      typeof sortByRaw === "string" && sortByRaw.trim()
+        ? sortByRaw.trim()
+        : "createdAt";
+    const order =
+      typeof orderRaw === "string" && orderRaw.trim()
+        ? (orderRaw.trim() as "asc" | "desc")
+        : undefined;
+
+    return { page, limit, search, status, type, sortBy, order };
+  }
+
+  /**
+   * Initial-load endpoint: return all testimonial details.
+   * GET /api/testimonials
+   */
+  async listAll(req: Request, res: Response, next: NextFunction){
     try {
-      const data = await TestimonialModel.find().sort({ createdAt: -1 });
+      const params = this.parseFilterQuery(req.query as Record<string, unknown>);
+      const result = await this.testimonialService.filterTestimonials(params);
 
       return res.status(StatusCode.OK).json({
         success: true,
-        data,
+        total: result.total,
+        page: result.page,
+        limit: params.limit,
+        data: result.data,
       });
     } catch (error) {
       return next(error);
     }
   }
+
   /**
    * Filtering endpoint: search + pagination + sorting + filtering.
    * GET /api/testimonials/filter
@@ -51,70 +92,15 @@ export class TestimonialController {
     next: NextFunction
   ) {
     try {
-      const query = req.query as Record<string, unknown>;
-
-      const pageRaw = query.page;
-      const limitRaw = query.limit;
-      const searchRaw = query.search;
-      const statusRaw = query.status;
-      const typeRaw = query.type;
-      const sortByRaw = query.sortBy;
-      const orderRaw = query.order;
-
-      const page =
-        typeof pageRaw === "string" && pageRaw.trim()
-          ? Number(pageRaw)
-          : 1;
-      const limit =
-        typeof limitRaw === "string" && limitRaw.trim()
-          ? Number(limitRaw)
-          : 10;
-
-      const search =
-        typeof searchRaw === "string" && searchRaw.trim()
-          ? searchRaw
-          : undefined;
-
-      const status =
-        typeof statusRaw === "string" && statusRaw.trim()
-          ? statusRaw
-          : undefined;
-
-      const type =
-        typeof typeRaw === "string" && typeRaw.trim()
-          ? typeRaw
-          : undefined;
-
-      const sortBy =
-        typeof sortByRaw === "string" && sortByRaw.trim()
-          ? sortByRaw
-          : "createdAt";
-
-      const order =
-        typeof orderRaw === "string" && orderRaw.trim()
-          ? orderRaw === "asc"
-            ? "asc"
-            : "desc"
-          : "desc";
-
-      const result = await this.testimonialService.filterTestimonials({
-        page,
-        limit,
-        search,
-        status,
-        type,
-        sortBy,
-        order,
-      });
+      const params = this.parseFilterQuery(req.query as Record<string, unknown>);
+      const result = await this.testimonialService.filterTestimonials(params);
 
       return res.status(StatusCode.OK).json({
         success: true,
+        total: result.total,
+        page: result.page,
+        limit: params.limit,
         data: result.data,
-        pagination: {
-          total: result.total,
-          page: result.page,
-          pages: result.pages,
-        },
       });
     } catch (error) {
       return next(error);

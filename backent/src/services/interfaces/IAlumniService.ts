@@ -8,7 +8,6 @@ export interface IAlumniService {
     input: UpdateAlumniInput
   ): Promise<IAlumniDocument>;
   deleteAlumni(alumniId: string): Promise<void>;
-  getAlumniById(alumniId: string): Promise<IAlumniDocument>;
 
   filterAlumni(params: {
     page: number;

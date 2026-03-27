@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
 export const connectDB = async () => {
+
+  console.log('.....',process.env.MONGO_URL)
   try {
     if (!process.env.MONGO_URL) {
       throw new Error("MONGO_URL is missing");

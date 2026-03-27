@@ -23,7 +23,6 @@ router.put(
   courseUploadMiddleware.handle.bind(courseUploadMiddleware),
   courseController.update.bind(courseController)
 );
-router.delete("/:id/image", courseController.deleteImage.bind(courseController));
 router.delete("/:id", courseController.delete.bind(courseController));
 
 export default router;

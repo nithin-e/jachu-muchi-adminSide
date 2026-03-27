@@ -57,6 +57,12 @@ const enquirySchema = new Schema<IEnquiryDocument>(
   { timestamps: true }
 );
 
+// Query performance indexes for common search/filter/sort fields.
+enquirySchema.index({ name: 1 });
+enquirySchema.index({ email: 1 });
+enquirySchema.index({ phone: 1 });
+enquirySchema.index({ status: 1, type: 1, createdAt: -1 });
+
 export const EnquiryModel = mongoose.model<IEnquiryDocument>(
   "enquiries",
   enquirySchema

@@ -59,9 +59,14 @@ export class EnquiryService implements IEnquiryService {
       normalizedType = type as EnquiryType;
     }
 
-    // Extra guard against unexpected sort fields
     const safeSortBy =
       typeof sortBy === "string" && sortBy.trim() ? sortBy.trim() : undefined;
+
+    const normalizedOrder =
+      order === "asc" ? "asc" : order === "desc" ? "desc" : undefined;
+    if (order !== undefined && normalizedOrder === undefined) {
+      throwBadRequest(MESSAGES.COMMON.ORDER_ASC_DESC);
+    }
 
     return this.enquiryRepository.filter({
       page,
@@ -69,8 +74,8 @@ export class EnquiryService implements IEnquiryService {
       search,
       status,
       type: normalizedType,
-      sortBy: safeSortBy ?? "createdAt",
-      order: order ?? "desc",
+      sortBy: safeSortBy ?? "date",
+      order: normalizedOrder ?? "desc",
     });
   }
 

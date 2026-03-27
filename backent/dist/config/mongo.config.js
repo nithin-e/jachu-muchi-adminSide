@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const connectDB = async () => {
+    console.log('.....', process.env.MONGO_URL);
     try {
         if (!process.env.MONGO_URL) {
             throw new Error("MONGO_URL is missing");
