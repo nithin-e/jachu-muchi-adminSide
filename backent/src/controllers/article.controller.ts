@@ -7,22 +7,11 @@ import {
 } from "../dto/article.mapper";
 import { ArticleModel, IArticleDocument } from "../models/Article";
 import { IArticleService } from "../services/interfaces/IArticleService";
-import { getAllHandler } from "./getAllHandler";
 import { StatusCode } from "../constants/statusCodes";
 import { MESSAGES } from "../constants/messages";
 
-export const getAllArticles = getAllHandler<IArticleDocument>(ArticleModel, [
-  "title",
-  "description",
-  "status",
-]);
-
 export class ArticleController {
   constructor(private readonly articleService: IArticleService) {}
-
-  list(req: Request, res: Response, next: NextFunction) {
-    return getAllArticles(req, res, next);
-  }
 
   /**
    * Initial-load endpoint: returns all articles/news, no pagination.

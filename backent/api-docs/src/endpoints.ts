@@ -257,7 +257,6 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
     query: [...FILTER_QUERY, { key: "status", label: "Status", type: "select", options: ["Published", "Draft"] }],
   },
   { id: "article-stats", module: "articles", method: "GET", path: "/api/articles/stats", description: "Article stats", protected: true, headers: AUTH_HEADER },
-  { id: "article-list", module: "articles", method: "GET", path: "/api/articles/", description: "Paginated article list", protected: true, headers: AUTH_HEADER },
   { id: "article-get-by-id", module: "articles", method: "GET", path: "/api/articles/:id", description: "Get article by id", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
   { id: "article-create", module: "articles", method: "POST", path: "/api/articles/", description: "Create article", protected: true, headers: AUTH_HEADER, body: ARTICLE_BODY_COMMON },
   { id: "article-update", module: "articles", method: "PUT", path: "/api/articles/:id", description: "Update article", protected: true, headers: AUTH_HEADER, params: ID_PARAM, body: ARTICLE_BODY_COMMON },
