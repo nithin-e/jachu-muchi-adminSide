@@ -129,8 +129,14 @@ export class CategoryController {
   }
   async create(req: Request, res: Response, next: NextFunction){
     try {
-      const name = mapBodyToName(req.body as Record<string, unknown>);
-      const category = await this.categoryService.createCategory({ name });
+      const body = req.body as Record<string, unknown>;
+      const name = mapBodyToName(body);
+      const productCount = typeof body.productCount === "number" ? body.productCount : undefined;
+
+      const category = await this.categoryService.createCategory({
+        name,
+        productCount,
+      });
 
       return res.status(StatusCode.CREATED).json({
         success: true,
@@ -151,8 +157,14 @@ export class CategoryController {
         });
       }
 
-      const name = mapBodyToName(req.body as Record<string, unknown>);
-      const category = await this.categoryService.updateCategory(id, { name });
+      const body = req.body as Record<string, unknown>;
+      const name = mapBodyToName(body);
+      const productCount = typeof body.productCount === "number" ? body.productCount : undefined;
+
+      const category = await this.categoryService.updateCategory(id, {
+        name,
+        productCount,
+      });
 
       return res.status(StatusCode.OK).json({
         success: true,

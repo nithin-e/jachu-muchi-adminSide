@@ -9,7 +9,6 @@ const router = Router();
 router.get("/all", articleController.listAll.bind(articleController));
 router.get("/filter", articleController.filterArticles.bind(articleController));
 router.get("/stats", articleController.stats.bind(articleController));
-router.get("/", articleController.list.bind(articleController));
 router.get("/:id", articleController.getById.bind(articleController));
 router.post(
   "/",

@@ -27,7 +27,10 @@ export class CategoryService implements ICategoryService {
       throwConflict(MESSAGES.CATEGORY.DUPLICATE_NAME);
     }
 
-    return this.categoryRepository.create({ name });
+    return this.categoryRepository.create({
+      name,
+      productCount: input.productCount,
+    });
   }
 
   async updateCategory(
@@ -58,6 +61,7 @@ export class CategoryService implements ICategoryService {
 
     const updated = await this.categoryRepository.updateById(categoryId, {
       name,
+      productCount: input.productCount,
     });
     if (!updated) {
       throwNotFound(MESSAGES.CATEGORY.NOT_FOUND);
