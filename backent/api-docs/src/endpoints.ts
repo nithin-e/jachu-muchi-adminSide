@@ -117,6 +117,7 @@ const ARTICLE_BODY_COMMON: ApiField[] = [
 
 const CATEGORY_BODY_COMMON: ApiField[] = [
   { key: "name", label: "Name", type: "text", required: true },
+  { key: "productCount", label: "Product Count", type: "number" },
 ];
 
 const TESTIMONIAL_BODY_COMMON: ApiField[] = [

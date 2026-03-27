@@ -40,6 +40,7 @@ export class CategoryRepository implements ICategoryRepository {
   async create(payload: CreateCategoryInput): Promise<ICategoryDocument> {
     const doc = new CategoryModel({
       name: payload.name,
+      productCount: payload.productCount ?? 0,
     });
     return doc.save();
   }
@@ -59,9 +60,14 @@ export class CategoryRepository implements ICategoryRepository {
     payload: UpdateCategoryInput
   ): Promise<ICategoryDocument | null> {
     const name = payload.name.trim();
+    const update: any = { name, nameKey: name.toLowerCase() };
+    if (payload.productCount !== undefined) {
+      update.productCount = payload.productCount;
+    }
+
     return CategoryModel.findByIdAndUpdate(
       id,
-      { $set: { name, nameKey: name.toLowerCase() } },
+      { $set: update },
       { new: true }
     );
   }
