@@ -120,6 +120,12 @@ const CATEGORY_BODY_COMMON: ApiField[] = [
   { key: "productCount", label: "Product Count", type: "number" },
 ];
 
+const GALLERY_BODY_COMMON: ApiField[] = [
+  { key: "title", label: "Title", type: "text", required: true },
+  { key: "category", label: "Category", type: "select", options: ["Campus", "Labs", "Events"], required: true },
+  { key: "galleryImage", label: "Gallery Image", type: "file" },
+];
+
 const TESTIMONIAL_BODY_COMMON: ApiField[] = [
   { key: "name", label: "Name", type: "text", required: true },
   { key: "course", label: "Course", type: "text", required: true },
@@ -271,6 +277,8 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
 
   { id: "gallery-all", module: "gallery", method: "GET", path: "/api/gallery/all", description: "Gallery initial list", protected: true, headers: AUTH_HEADER },
   { id: "gallery-filter", module: "gallery", method: "GET", path: "/api/gallery/filter", description: "Filter gallery", protected: true, headers: AUTH_HEADER, query: FILTER_QUERY },
+  { id: "gallery-create", module: "gallery", method: "POST", path: "/api/gallery/", description: "Create gallery item", protected: true, headers: AUTH_HEADER, body: GALLERY_BODY_COMMON },
+  { id: "gallery-update", module: "gallery", method: "PUT", path: "/api/gallery/:id", description: "Update gallery item", protected: true, headers: AUTH_HEADER, params: ID_PARAM, body: GALLERY_BODY_COMMON },
   { id: "gallery-delete", module: "gallery", method: "DELETE", path: "/api/gallery/:id", description: "Delete gallery item", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
 
   { id: "testimonial-list-all", module: "testimonials", method: "GET", path: "/api/testimonials/all", description: "List all testimonials (initial load)", protected: true, headers: AUTH_HEADER },

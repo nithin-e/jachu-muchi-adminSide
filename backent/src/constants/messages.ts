@@ -210,7 +210,13 @@ export const MESSAGES = {
     ID_REQUIRED: "Gallery id is required",
     INVALID_ID: "Invalid gallery id",
     NOT_FOUND: "Gallery not found",
+    CREATED_SUCCESS: "Gallery item created successfully",
+    UPDATED_SUCCESS: "Gallery item updated successfully",
     DELETED_SUCCESS: "Gallery deleted successfully",
+
+    TITLE_REQUIRED: "Title is required",
+    CATEGORY_REQUIRED: "Category is required",
+    IMAGE_REQUIRED: "Image is required",
   },
 } as const;
 

@@ -4,6 +4,7 @@ import { GalleryModel, IGalleryDocument } from "../models/Gallery";
 import { getAllHandler } from "./getAllHandler";
 import { StatusCode } from "../constants/statusCodes";
 import { MESSAGES } from "../constants/messages";
+import { galleryUploadPublicPath } from "../config/multer.gallery";
 
 export const getAllGallery = getAllHandler<IGalleryDocument>(GalleryModel, [
   "title",
@@ -142,6 +143,105 @@ export const filterGallery = async (
         page,
         pages,
       },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * POST /api/gallery/
+ */
+export const createGallery = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { title, category } = req.body;
+    const file = req.file;
+
+    if (!title) {
+        return res.status(StatusCode.BAD_REQUEST).json({
+            success: false,
+            message: MESSAGES.GALLERY.TITLE_REQUIRED,
+        });
+    }
+
+    if (!category) {
+        return res.status(StatusCode.BAD_REQUEST).json({
+            success: false,
+            message: MESSAGES.GALLERY.CATEGORY_REQUIRED,
+        });
+    }
+
+    if (!file) {
+        return res.status(StatusCode.BAD_REQUEST).json({
+            success: false,
+            message: MESSAGES.GALLERY.IMAGE_REQUIRED,
+        });
+    }
+
+    const imageUrl = `${galleryUploadPublicPath}/${file.filename}`;
+
+    const newItem = new GalleryModel({
+        title,
+        category,
+        imageUrl,
+    });
+
+    const data = await newItem.save();
+
+    return res.status(StatusCode.CREATED).json({
+        success: true,
+        message: MESSAGES.GALLERY.CREATED_SUCCESS,
+        data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * PUT /api/gallery/:id
+ */
+export const updateGallery = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    if (typeof id !== "string" || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(StatusCode.BAD_REQUEST).json({
+            success: false,
+            message: MESSAGES.GALLERY.INVALID_ID,
+        });
+    }
+
+    const { title, category } = req.body;
+    const file = req.file;
+
+    const existing = await GalleryModel.findById(id);
+    if (!existing) {
+        return res.status(StatusCode.NOT_FOUND).json({
+            success: false,
+            message: MESSAGES.GALLERY.NOT_FOUND,
+        });
+    }
+
+    if (title !== undefined) existing.title = title;
+    if (category !== undefined) existing.category = category;
+    if (file) {
+        existing.imageUrl = `${galleryUploadPublicPath}/${file.filename}`;
+    }
+
+    const data = await existing.save();
+
+    return res.status(StatusCode.OK).json({
+        success: true,
+        message: MESSAGES.GALLERY.UPDATED_SUCCESS,
+        data,
     });
   } catch (error) {
     return next(error);
