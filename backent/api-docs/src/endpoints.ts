@@ -243,7 +243,6 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
     note: "This endpoint expects multipart file upload (`courseImage`).",
   },
   { id: "course-update", module: "courses", method: "PUT", path: "/api/courses/:id", description: "Update course", protected: true, headers: AUTH_HEADER, params: ID_PARAM, body: COURSE_BODY_COMMON },
-  { id: "course-delete-image", module: "courses", method: "DELETE", path: "/api/courses/:id/image", description: "Delete course image", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
   { id: "course-delete", module: "courses", method: "DELETE", path: "/api/courses/:id", description: "Delete course", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
 
   { id: "article-list-all", module: "articles", method: "GET", path: "/api/articles/all", description: "List all articles (initial load)", protected: true, headers: AUTH_HEADER },
@@ -266,14 +265,13 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
 
   { id: "category-list-all", module: "categories", method: "GET", path: "/api/categories/all", description: "List all categories (initial load)", protected: true, headers: AUTH_HEADER },
   { id: "category-filter", module: "categories", method: "GET", path: "/api/categories/filter", description: "Filter categories", protected: true, headers: AUTH_HEADER, query: FILTER_QUERY },
-  { id: "category-list", module: "categories", method: "GET", path: "/api/categories/", description: "Paginated category list", protected: true, headers: AUTH_HEADER },
   { id: "category-create", module: "categories", method: "POST", path: "/api/categories/", description: "Create category", protected: true, headers: AUTH_HEADER, body: CATEGORY_BODY_COMMON },
   { id: "category-update", module: "categories", method: "PUT", path: "/api/categories/:id", description: "Update category", protected: true, headers: AUTH_HEADER, params: ID_PARAM, body: CATEGORY_BODY_COMMON },
   { id: "category-delete", module: "categories", method: "DELETE", path: "/api/categories/:id", description: "Delete category", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
 
   { id: "gallery-all", module: "gallery", method: "GET", path: "/api/gallery/all", description: "Gallery initial list", protected: true, headers: AUTH_HEADER },
   { id: "gallery-filter", module: "gallery", method: "GET", path: "/api/gallery/filter", description: "Filter gallery", protected: true, headers: AUTH_HEADER, query: FILTER_QUERY },
-  { id: "gallery-list", module: "gallery", method: "GET", path: "/api/gallery/", description: "Paginated gallery list", protected: true, headers: AUTH_HEADER, query: FILTER_QUERY },
+  { id: "gallery-delete", module: "gallery", method: "DELETE", path: "/api/gallery/:id", description: "Delete gallery item", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
 
   { id: "testimonial-list-all", module: "testimonials", method: "GET", path: "/api/testimonials/all", description: "List all testimonials (initial load)", protected: true, headers: AUTH_HEADER },
   { id: "testimonial-list", module: "testimonials", method: "GET", path: "/api/testimonials/", description: "Paginated testimonial list", protected: true, headers: AUTH_HEADER },
@@ -285,15 +283,12 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
 
   { id: "alumni-list-all", module: "alumni", method: "GET", path: "/api/alumni/all", description: "List all alumni (initial load)", protected: true, headers: AUTH_HEADER },
   { id: "alumni-filter", module: "alumni", method: "GET", path: "/api/alumni/filter", description: "Filter alumni", protected: true, headers: AUTH_HEADER, query: FILTER_QUERY },
-  { id: "alumni-list", module: "alumni", method: "GET", path: "/api/alumni/", description: "Paginated alumni list", protected: true, headers: AUTH_HEADER },
-  { id: "alumni-get-by-id", module: "alumni", method: "GET", path: "/api/alumni/:id", description: "Get alumni by id", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
   { id: "alumni-create", module: "alumni", method: "POST", path: "/api/alumni/", description: "Create alumni", protected: true, headers: AUTH_HEADER, body: ALUMNI_BODY_COMMON },
   { id: "alumni-update", module: "alumni", method: "PUT", path: "/api/alumni/:id", description: "Update alumni", protected: true, headers: AUTH_HEADER, params: ID_PARAM, body: ALUMNI_BODY_COMMON },
   { id: "alumni-delete", module: "alumni", method: "DELETE", path: "/api/alumni/:id", description: "Delete alumni", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
 
   { id: "branch-list-all", module: "branches", method: "GET", path: "/api/branches/all", description: "List all branches (initial load)", protected: true, headers: AUTH_HEADER },
   { id: "branch-filter", module: "branches", method: "GET", path: "/api/branches/filter", description: "Filter branches", protected: true, headers: AUTH_HEADER, query: FILTER_QUERY },
-  { id: "branch-list", module: "branches", method: "GET", path: "/api/branches/", description: "Paginated branch list", protected: true, headers: AUTH_HEADER },
   { id: "branch-get-by-id", module: "branches", method: "GET", path: "/api/branches/:id", description: "Get branch by id", protected: true, headers: AUTH_HEADER, params: ID_PARAM },
   { id: "branch-create", module: "branches", method: "POST", path: "/api/branches/", description: "Create branch", protected: true, headers: AUTH_HEADER, body: BRANCH_BODY_COMMON },
   { id: "branch-update", module: "branches", method: "PUT", path: "/api/branches/:id", description: "Update branch", protected: true, headers: AUTH_HEADER, params: ID_PARAM, body: BRANCH_BODY_COMMON },

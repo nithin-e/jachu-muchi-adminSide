@@ -152,12 +152,17 @@ export class CourseController {
 
       return res.status(StatusCode.OK).json({
         success: true,
-        data: result.data,
-        pagination: {
-          total: result.total,
-          page: result.page,
-          pages: result.pages,
-        },
+        total: result.total,
+        page: result.page,
+        limit,
+        data: result.data.map((doc) => {
+          const d = doc as any;
+          const { createdAt, updatedAt, __v, ...rest } = d;
+          return {
+            ...rest,
+            date: createdAt,
+          };
+        }),
       });
     } catch (error) {
       return next(error);
@@ -268,30 +273,6 @@ export class CourseController {
       return res.status(StatusCode.OK).json({
         success: true,
         message: MESSAGES.COURSE.IMAGE_UPLOADED_SUCCESS,
-        data: course,
-      });
-    } catch (error) {
-      return next(error);
-    }
-  }
-  /**
-   * DELETE /courses/:id/image — removes image only; course row stays.
-   */
-  async deleteImage(req: Request, res: Response, next: NextFunction){
-    try {
-      const { id } = req.params;
-      if (typeof id !== "string" || !id.trim()) {
-        return res.status(StatusCode.BAD_REQUEST).json({
-          success: false,
-          message: MESSAGES.COURSE.ID_REQUIRED,
-        });
-      }
-
-      const course = await this.courseService.removeCourseImage(id);
-
-      return res.status(StatusCode.OK).json({
-        success: true,
-        message: MESSAGES.COURSE.IMAGE_REMOVED_SUCCESS,
         data: course,
       });
     } catch (error) {

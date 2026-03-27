@@ -207,6 +207,10 @@ export const MESSAGES = {
   GALLERY: {
     INVALID_PAGE: "Invalid page",
     INVALID_LIMIT: "Invalid limit",
+    ID_REQUIRED: "Gallery id is required",
+    INVALID_ID: "Invalid gallery id",
+    NOT_FOUND: "Gallery not found",
+    DELETED_SUCCESS: "Gallery deleted successfully",
   },
 } as const;
 

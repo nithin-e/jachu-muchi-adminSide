@@ -5,7 +5,6 @@ const router = Router();
 
 router.get("/all", branchController.listAll.bind(branchController));
 router.get("/filter", branchController.filterBranches.bind(branchController));
-router.get("/", branchController.list.bind(branchController));
 router.get("/:id", branchController.getById.bind(branchController));
 router.post("/", branchController.create.bind(branchController));
 router.put("/:id", branchController.update.bind(branchController));

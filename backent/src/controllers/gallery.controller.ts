@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import mongoose from "mongoose";
 import { GalleryModel, IGalleryDocument } from "../models/Gallery";
 import { getAllHandler } from "./getAllHandler";
 import { StatusCode } from "../constants/statusCodes";
@@ -141,6 +142,47 @@ export const filterGallery = async (
         page,
         pages,
       },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
+ * DELETE /api/gallery/:id
+ */
+export const deleteGallery = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    if (typeof id !== "string" || !id.trim()) {
+      return res.status(StatusCode.BAD_REQUEST).json({
+        success: false,
+        message: MESSAGES.GALLERY.ID_REQUIRED,
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(StatusCode.BAD_REQUEST).json({
+        success: false,
+        message: MESSAGES.GALLERY.INVALID_ID,
+      });
+    }
+
+    const removed = await GalleryModel.findByIdAndDelete(id);
+    if (!removed) {
+      return res.status(StatusCode.NOT_FOUND).json({
+        success: false,
+        message: MESSAGES.GALLERY.NOT_FOUND,
+      });
+    }
+
+    return res.status(StatusCode.OK).json({
+      success: true,
+      message: MESSAGES.GALLERY.DELETED_SUCCESS,
     });
   } catch (error) {
     return next(error);

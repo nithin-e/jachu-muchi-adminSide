@@ -8,8 +8,6 @@ const router = Router();
 
 router.get("/all", alumniController.listAll.bind(alumniController));
 router.get("/filter", alumniController.filterAlumni.bind(alumniController));
-router.get("/", alumniController.list.bind(alumniController));
-router.get("/:id", alumniController.getById.bind(alumniController));
 router.post(
   "/",
   alumniUploadMiddleware.handle.bind(alumniUploadMiddleware),

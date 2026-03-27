@@ -8,6 +8,7 @@ class AuthController {
     }
     async login(req, res, next) {
         try {
+            console.log("logineeeeeeeeeeeeeeeeee", req.body);
             const { email, password } = req.body;
             const result = await this.authService.login({ email, password });
             if (!result.ok) {

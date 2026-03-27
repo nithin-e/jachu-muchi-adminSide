@@ -64,4 +64,9 @@ const enquirySchema = new mongoose_1.Schema({
     },
     notes: { type: String, default: "", trim: true },
 }, { timestamps: true });
+// Query performance indexes for common search/filter/sort fields.
+enquirySchema.index({ name: 1 });
+enquirySchema.index({ email: 1 });
+enquirySchema.index({ phone: 1 });
+enquirySchema.index({ status: 1, type: 1, createdAt: -1 });
 exports.EnquiryModel = mongoose_1.default.model("enquiries", enquirySchema);

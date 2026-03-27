@@ -73,19 +73,6 @@ export class AlumniService implements IAlumniService {
     tryRemoveProfileImageFile(removed.profileImageUrl);
   }
 
-  async getAlumniById(alumniId: string): Promise<IAlumniDocument> {
-    if (!mongoose.Types.ObjectId.isValid(alumniId)) {
-      throwBadRequest(MESSAGES.ALUMNI.INVALID_ID);
-    }
-
-    const doc = await this.alumniRepository.findById(alumniId);
-    if (!doc) {
-      throwNotFound(MESSAGES.ALUMNI.NOT_FOUND);
-    }
-
-    return doc;
-  }
-
   private normalizeAndValidate(
     input: CreateAlumniInput | UpdateAlumniInput
   ): CreateAlumniInput {

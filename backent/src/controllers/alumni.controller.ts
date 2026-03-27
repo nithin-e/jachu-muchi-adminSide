@@ -7,22 +7,11 @@ import {
 } from "../dto/alumni.mapper";
 import { AlumniModel, IAlumniDocument } from "../models/Alumni";
 import { IAlumniService } from "../services/interfaces/IAlumniService";
-import { getAllHandler } from "./getAllHandler";
 import { StatusCode } from "../constants/statusCodes";
 import { MESSAGES } from "../constants/messages";
 
-export const getAllAlumni = getAllHandler<IAlumniDocument>(AlumniModel, [
-  "name",
-  "role",
-  "company",
-]);
-
 export class AlumniController {
   constructor(private readonly alumniService: IAlumniService) {}
-
-  list(req: Request, res: Response, next: NextFunction) {
-    return getAllAlumni(req, res, next);
-  }
 
   /**
    * Initial-load endpoint: returns all alumni with details, no pagination.
@@ -113,26 +102,6 @@ export class AlumniController {
           page: result.page,
           pages: result.pages,
         },
-      });
-    } catch (error) {
-      return next(error);
-    }
-  }
-  async getById(req: Request, res: Response, next: NextFunction){
-    try {
-      const { id } = req.params;
-      if (typeof id !== "string" || !id.trim()) {
-        return res.status(StatusCode.BAD_REQUEST).json({
-          success: false,
-          message: MESSAGES.ALUMNI.ID_REQUIRED,
-        });
-      }
-
-      const data = await this.alumniService.getAlumniById(id);
-
-      return res.status(StatusCode.OK).json({
-        success: true,
-        data,
       });
     } catch (error) {
       return next(error);

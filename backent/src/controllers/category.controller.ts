@@ -111,12 +111,17 @@ export class CategoryController {
 
       return res.status(StatusCode.OK).json({
         success: true,
-        data: result.data,
-        pagination: {
-          total: result.total,
-          page: result.page,
-          pages: result.pages,
-        },
+        total: result.total,
+        page: result.page,
+        limit,
+        data: result.data.map((doc) => {
+          const d = doc as any;
+          const { createdAt, updatedAt, __v, ...rest } = d;
+          return {
+            ...rest,
+            date: createdAt,
+          };
+        }),
       });
     } catch (error) {
       return next(error);

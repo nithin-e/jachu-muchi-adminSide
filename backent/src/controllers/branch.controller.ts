@@ -5,22 +5,11 @@ import {
 } from "../dto/branch.mapper";
 import { BranchModel, IBranchDocument } from "../models/Branch";
 import { IBranchService } from "../services/interfaces/IBranchService";
-import { getAllHandler } from "./getAllHandler";
 import { StatusCode } from "../constants/statusCodes";
 import { MESSAGES } from "../constants/messages";
 
-export const getAllBranches = getAllHandler<IBranchDocument>(BranchModel, [
-  "name",
-  "location",
-  "email",
-]);
-
 export class BranchController {
   constructor(private readonly branchService: IBranchService) {}
-
-  list(req: Request, res: Response, next: NextFunction) {
-    return getAllBranches(req, res, next);
-  }
 
   /**
    * Initial-load endpoint: returns all branches with details, no pagination.

@@ -17,7 +17,10 @@ export const authenticateToken = (
 ) => {
   const authHeader = req.headers.authorization;
 
+  console.log('authHeader.............', authHeader);
+
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.log('invalid token.............');
     throwUnauthorized(MESSAGES.AUTHZ.INVALID_TOKEN);
   }
 
