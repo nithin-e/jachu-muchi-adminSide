@@ -61,6 +61,16 @@ export class TestimonialController {
     return { page, limit, search, status, type, sortBy, order };
   }
 
+  private mapListResponseData(input: any[]) {
+    return input.map((doc) => {
+      const { createdAt, updatedAt, __v, ...rest } = doc;
+      return {
+        ...rest,
+        date: createdAt,
+      };
+    });
+  }
+
   /**
    * Initial-load endpoint: return all testimonial details.
    * GET /api/testimonials
@@ -75,7 +85,7 @@ export class TestimonialController {
         total: result.total,
         page: result.page,
         limit: params.limit,
-        data: result.data,
+        data: this.mapListResponseData(result.data as any[]),
       });
     } catch (error) {
       return next(error);
@@ -100,7 +110,7 @@ export class TestimonialController {
         total: result.total,
         page: result.page,
         limit: params.limit,
-        data: result.data,
+        data: this.mapListResponseData(result.data as any[]),
       });
     } catch (error) {
       return next(error);
