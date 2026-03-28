@@ -48,10 +48,10 @@ export class EnquiryController {
 
   private mapListResponseData(input: any[]) {
     return input.map((doc) => {
-      const { createdAt, updatedAt, course, notes, __v, ...rest } = doc;
+      const { createdAt, updatedAt, __v, ...rest } = doc;
       return {
         ...rest,
-        date: createdAt,
+        date: createdAt || (doc as any).date,
       };
     });
   }
