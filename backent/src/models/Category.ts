@@ -19,8 +19,8 @@ const categorySchema = new Schema<ICategoryDocument>(
   { timestamps: true }
 );
 
-categorySchema.pre("save", function setNameKey() {
-  if (this.isModified("name")) {
+categorySchema.pre("validate", function setNameKey() {
+  if (this.isModified("name") && this.name) {
     this.nameKey = this.name.trim().toLowerCase();
   }
 });
