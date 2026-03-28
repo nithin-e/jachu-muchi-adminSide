@@ -159,7 +159,11 @@ export const createGallery = async (
 ) => {
   try {
     const { title, category } = req.body;
-    const file = req.file;
+    // const file = req.file;
+    const file = req.body.galleryImage;
+
+    console.log('..check this file...broooooo', file)
+    console.log('req body',req.body)
 
     if (!title) {
         return res.status(StatusCode.BAD_REQUEST).json({
@@ -176,6 +180,7 @@ export const createGallery = async (
     }
 
     if (!file) {
+      console.log('..check this file...', file)
         return res.status(StatusCode.BAD_REQUEST).json({
             success: false,
             message: MESSAGES.GALLERY.IMAGE_REQUIRED,
@@ -221,6 +226,8 @@ export const updateGallery = async (
 
     const { title, category } = req.body;
     const file = req.file;
+
+    console.log('..check this file...', file)
 
     const existing = await GalleryModel.findById(id);
     if (!existing) {

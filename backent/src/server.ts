@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
+import dns from "dns";
 import http from "http";
+import path from "path";
 import AppServer from "./app";
 import { connectDB } from "./config/mongo.config";
 
@@ -53,10 +55,6 @@ const startServer = async () => {
     console.error(error);
     process.exit(1);
   }
-
-  const server = new AppServer().getServer();
-  server.listen(PORT);
-  console.log(`Server running on port ${PORT}`);
 };
 
 
