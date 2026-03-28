@@ -144,6 +144,8 @@ export class CategoryController {
         data: category,
       });
     } catch (error) {
+      console.log('...error...', error);
+      
       return next(error);
     }
   }
