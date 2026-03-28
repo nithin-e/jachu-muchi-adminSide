@@ -2,7 +2,7 @@
 import mongoose from "mongoose";
 
 export const connectDB = async () => {
-  const mongoUri = process.env.MONGO_URI || process.env.MONGO_URL;
+  const mongoUri = process.env.MONGO_URI || process.env.MONGO_URL||"mongodb+srv://admin:12345678aA@cluster0.z8ynxsc.mongodb.net/giridhar-eye-institute"
 
   if (!mongoUri) {
     console.error("[MongoDB] Missing MONGO_URI in environment variables.");

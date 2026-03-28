@@ -10,8 +10,11 @@ export const handleValidation = (
 ) => {
   const result = validationResult(req);
   if (result.isEmpty()) {
+    console.log('result is empty.............');
     return next();
   }
+  console.log('result is not empty.............');
+  
   return res.status(StatusCode.BAD_REQUEST).json({
     success: false,
     message: result.array()[0]?.msg || MESSAGES.COMMON.INVALID("request"),

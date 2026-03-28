@@ -200,7 +200,30 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
   },
 
   { id: "enquiry-list", module: "enquiries", method: "GET", path: "/api/enquiries/", description: "List enquiries", protected: true, headers: AUTH_HEADER },
-  { id: "enquiry-filter", module: "enquiries", method: "GET", path: "/api/enquiries/filter", description: "Filter enquiries", protected: true, headers: AUTH_HEADER, query: FILTER_QUERY },
+  {
+    id: "enquiry-filter",
+    module: "enquiries",
+    method: "GET",
+    path: "/api/enquiries/filter",
+    description: "Filter enquiries",
+    protected: true,
+    headers: AUTH_HEADER,
+    query: [
+      ...FILTER_QUERY,
+      {
+        key: "status",
+        label: "Status",
+        type: "select",
+        options: ["New", "Contacted", "Interested", "Converted", "Closed"],
+      },
+      {
+        key: "type",
+        label: "Type",
+        type: "select",
+        options: ["Course Enquiry", "Normal Enquiry"],
+      },
+    ],
+  },
   {
     id: "enquiry-update-status",
     module: "enquiries",

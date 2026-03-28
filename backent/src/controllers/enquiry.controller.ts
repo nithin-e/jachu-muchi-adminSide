@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { EnquiryStatus } from "../models/Enquiry";
+import { EnquiryStatus, ENQUIRY_STATUS_VALUES } from "../models/Enquiry";
 import { IEnquiryService } from "../services/interfaces/IEnquiryService";
 import { StatusCode } from "../constants/statusCodes";
 import { MESSAGES } from "../constants/messages";
@@ -27,12 +27,13 @@ export class EnquiryController {
 
     const search =
       typeof searchRaw === "string" ? searchRaw : undefined;
+    const statusValue = typeof statusRaw === "string" ? statusRaw.trim() : undefined;
     const status =
-      typeof statusRaw === "string" && statusRaw.trim()
-        ? (statusRaw.trim() as EnquiryStatus)
+      statusValue && (ENQUIRY_STATUS_VALUES as string[]).includes(statusValue)
+        ? (statusValue as EnquiryStatus)
         : undefined;
-    const type =
-      typeof typeRaw === "string" && typeRaw.trim() ? typeRaw.trim() : undefined;
+    const typeRawValue = typeof typeRaw === "string" ? typeRaw.trim() : undefined;
+    const type = typeRawValue && typeRawValue !== "All" ? typeRawValue : undefined;
     const sortBy =
       typeof sortByRaw === "string" && sortByRaw.trim()
         ? sortByRaw.trim()
