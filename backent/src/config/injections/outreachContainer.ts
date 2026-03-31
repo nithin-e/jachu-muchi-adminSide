@@ -1,6 +1,6 @@
 
 
-import { OutreachController } from "../../controllers/OutreachController";
+import { OutreachController } from "../../controllers/outreach.controller";
 import { NotificationRepository } from "../../repositories/implementations/NotificationRepository";
 import { MailDispatchService } from "../../services/implementations/MailDispatchService";
 import createTransporter from "../mailerConfig";

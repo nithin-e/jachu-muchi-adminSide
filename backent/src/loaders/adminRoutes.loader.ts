@@ -22,6 +22,6 @@ export function loadAdminRoutes(app: Application): void {
   app.use("/api/admin/branches", authenticateToken, branchRoutes);
   app.use("/api/admin/testimonials", authenticateToken, testimonialRoutes);
   app.use("/api/admin/users", authenticateToken, userMgmtRoutes);
-  app.use("/api/admin/settings", authenticateToken, settingsRoutes);
+  app.use("/api/settings", settingsRoutes);
   app.use("/api/admin/outreach", authenticateToken, outreachRoutes);
 }

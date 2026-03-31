@@ -11,6 +11,8 @@ export class MailDispatchService implements IMailDispatchService {
 
   async dispatchEnquiryMails(payload: EnquiryPayload): Promise<MailDispatchResult> {
     const recipients = await this.notificationRepository.fetchAllRecipientEmails();
+  
+    
 
     if (recipients.length === 0) {
       return {
@@ -26,6 +28,9 @@ export class MailDispatchService implements IMailDispatchService {
 
     const htmlBody = this.buildEmailHtml(payload);
 
+   
+    
+
     // Send to every recipient independently so one failure doesn't block others
     await Promise.allSettled(
       recipients.map(async (recipientEmail) => {
@@ -37,6 +42,8 @@ export class MailDispatchService implements IMailDispatchService {
             html: htmlBody,
           });
           deliveredTo.push(recipientEmail);
+          console.log('okey aaahnu broooo',deliveredTo);
+          
         } catch (err) {
           console.error(`[MailDispatchService] Failed to send to ${recipientEmail}:`, err);
           failedTo.push(recipientEmail);
@@ -62,29 +69,17 @@ export class MailDispatchService implements IMailDispatchService {
         <h2 style="color: #333; border-bottom: 2px solid #4f46e5; padding-bottom: 8px;">New Enquiry Received</h2>
         <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
           <tr>
-            <td style="padding: 8px; font-weight: bold; color: #555; width: 30%;">Name</td>
-            <td style="padding: 8px; color: #333;">${this.escape(payload.name)}</td>
+            <td style="padding: 8px; font-weight: bold; color: #555; width: 30%;">Full Name</td>
+            <td style="padding: 8px; color: #333;">${this.escape(payload.fullName)}</td>
           </tr>
           <tr style="background: #f9f9f9;">
-            <td style="padding: 8px; font-weight: bold; color: #555;">Email</td>
-            <td style="padding: 8px; color: #333;">${this.escape(payload.email)}</td>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Email or Phone</td>
+            <td style="padding: 8px; color: #333;">${this.escape(payload.emailOrPhone)}</td>
           </tr>
-          ${
-            payload.phone
-              ? `<tr>
-                <td style="padding: 8px; font-weight: bold; color: #555;">Phone</td>
-                <td style="padding: 8px; color: #333;">${this.escape(payload.phone)}</td>
-              </tr>`
-              : ""
-          }
-          ${
-            payload.subject
-              ? `<tr style="background: #f9f9f9;">
-                <td style="padding: 8px; font-weight: bold; color: #555;">Subject</td>
-                <td style="padding: 8px; color: #333;">${this.escape(payload.subject)}</td>
-              </tr>`
-              : ""
-          }
+          <tr>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Course</td>
+            <td style="padding: 8px; color: #333;">${this.escape(payload.course)}</td>
+          </tr>
           <tr style="background: #f9f9f9;">
             <td style="padding: 8px; font-weight: bold; color: #555; vertical-align: top;">Message</td>
             <td style="padding: 8px; color: #333; white-space: pre-line;">${this.escape(payload.message)}</td>
