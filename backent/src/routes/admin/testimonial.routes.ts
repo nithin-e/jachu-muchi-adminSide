@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   testimonialController,
   testimonialUploadMiddleware,
-} from "../config/injections/testimonial.injection";
+} from "../../config/injections/testimonial.injection";
 
 const router = Router();
 

@@ -5,8 +5,8 @@ import {
   filterGallery,
   getAllGalleryInitial,
   updateGallery,
-} from "../controllers/gallery.controller";
-import { GalleryUploadMiddleware } from "../middlewares/implementations/GalleryUploadMiddleware";
+} from "../../controllers/gallery.controller";
+import { GalleryUploadMiddleware } from "../../middlewares/implementations/GalleryUploadMiddleware";
 
 const router = Router();
 const galleryUpload = new GalleryUploadMiddleware();

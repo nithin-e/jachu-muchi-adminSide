@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   alumniController,
   alumniUploadMiddleware,
-} from "../config/injections/alumni.injection";
+} from "../../config/injections/alumni.injection";
 
 const router = Router();
 

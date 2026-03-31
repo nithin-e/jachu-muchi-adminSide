@@ -14,6 +14,7 @@ export interface AuthenticatedUser {
 export interface TokenPayload {
   id: string;
   email?: string;
+  role?: string;
 }
 
 export interface LoginSuccessData {

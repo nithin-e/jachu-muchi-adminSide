@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   bannerController,
   bannerUploadMiddleware,
-} from "../config/injections/banner.injection";
+} from "../../config/injections/banner.injection";
 
 const router = Router();
 

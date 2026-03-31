@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { categoryController } from "../config/injections/category.injection";
+import { categoryController } from "../../config/injections/category.injection";
 
 const router = Router();
 
