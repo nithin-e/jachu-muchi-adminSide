@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { branchController } from "../config/injections/branch.injection";
+import { branchController } from "../../config/injections/branch.injection";
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { outreachController } from "../config/injections/outreachContainer";
+import { outreachController } from "../../config/injections/outreachContainer";
 
 const outreachRouter = Router();
 

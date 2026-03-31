@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   courseController,
   courseUploadMiddleware,
-} from "../config/injections/course.injection";
+} from "../../config/injections/course.injection";
 
 const router = Router();
 

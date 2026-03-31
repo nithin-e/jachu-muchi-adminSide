@@ -2,25 +2,14 @@ import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import path from "path";
-import authRoutes from "./routes/auth.routes";
-import bannerRoutes from "./routes/banner.routes";
-import articleRoutes from "./routes/article.routes";
-import categoryRoutes from "./routes/category.routes";
-import enquiryRoutes from "./routes/enquiry.routes";
-import courseRoutes from "./routes/course.routes";
-import galleryRoutes from "./routes/gallery.routes";
-import alumniRoutes from "./routes/alumni.routes";
-import branchRoutes from "./routes/branch.routes";
-import testimonialRoutes from "./routes/testimonial.routes";
-import userManagementRoutes from "./routes/userManagement.routes";
-import settingsRoutes from "./routes/settings.routes";
+import authRoutes from "./routes/admin/auth.routes";
 import { corsOptions } from "./config/cors.config";
-import { authenticateToken } from "./middlewares/auth.middleware";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { logRequest } from "./middlewares/logger.middleware";
 import { rateLimit } from "./middlewares/rate-limit.middleware";
 import { MESSAGES } from "./constants/messages";
-import outreachRouter from "./routes/outreachRoutes";
+import { loadAdminRoutes } from "./loaders/adminRoutes.loader";
+import { loadUserRoutes } from "./loaders/userRoutes.loader";
 
 class AppServer {
   public app: Application;
@@ -44,19 +33,12 @@ class AppServer {
   }
 
   private loadRoutes(): void {
+   
     this.app.use("/api/auth", authRoutes);
-    this.app.use("/api/enquiries", authenticateToken, enquiryRoutes);
-    this.app.use("/api/courses", authenticateToken, courseRoutes);
-    this.app.use("/api/articles", authenticateToken, articleRoutes);
-    this.app.use("/api/categories", authenticateToken, categoryRoutes);
-    this.app.use("/api/gallery", authenticateToken, galleryRoutes);
-    this.app.use("/api/testimonials", authenticateToken, testimonialRoutes);
-    this.app.use("/api/alumni", authenticateToken, alumniRoutes);
-    this.app.use("/api/branches", authenticateToken, branchRoutes);
-    this.app.use("/api/banners", authenticateToken, bannerRoutes);
-    this.app.use("/api/users", authenticateToken, userManagementRoutes);
-    this.app.use("/api/settings", authenticateToken, settingsRoutes);
-    this.app.use("/api/enquiry", outreachRouter);
+
+   
+    loadAdminRoutes(this.app);  
+    loadUserRoutes(this.app);   
 
     this.app.get("/", (_req, res) => {
       res.json({ message: MESSAGES.APP.BACKEND_RUNNING });

@@ -6,6 +6,7 @@ import { throwUnauthorized } from "../utils/http-errors.helper";
 type AuthTokenPayload = {
   id: string;
   email?: string;
+  role?: string;
   iat?: number;
   exp?: number;
 };

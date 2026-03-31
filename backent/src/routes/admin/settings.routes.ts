@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { settingsController } from "../config/injections/settings.injection";
+import { settingsController } from "../../config/injections/settings.injection";
 
 const router = Router();
 

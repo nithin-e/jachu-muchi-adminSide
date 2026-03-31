@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { userManagementController } from "../config/injections/user-management.injection";
-import { handleValidation } from "../validators/request.validator";
+import { userManagementController } from "../../config/injections/user-management.injection";
+import { handleValidation } from "../../validators/request.validator";
 import {
   validateCreateUser,
   validateUpdateUser,
   validateUserIdParam,
-} from "../validators/user-management.validator";
+} from "../../validators/user-management.validator";
 
 const router = Router();
 

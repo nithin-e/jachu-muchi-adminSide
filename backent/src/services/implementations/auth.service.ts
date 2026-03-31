@@ -45,9 +45,11 @@ export class AuthService implements IAuthService {
     const accessToken = this.tokenService.generateAccessToken({
       id: user.id,
       email: user.email,
+      role: user.role,
     });
     const refreshToken = this.tokenService.generateRefreshToken({
       id: user.id,
+      role: user.role,
     });
 
     return {
