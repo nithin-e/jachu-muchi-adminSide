@@ -1,8 +1,7 @@
 export interface EnquiryPayload {
-  name: string;
-  email: string;
-  phone?: string;
-  subject?: string;
+  fullName: string;
+  emailOrPhone: string;  // Email or phone number
+  course: string;
   message: string;
 }
 
