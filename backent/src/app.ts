@@ -33,12 +33,12 @@ class AppServer {
   }
 
   private loadRoutes(): void {
-   
-    this.app.use("/api/auth", authRoutes);
+    // Shared (no auth required)
+    this.app.use("/api/admin/auth", authRoutes);
 
-   
-    loadAdminRoutes(this.app);  
-    loadUserRoutes(this.app);   
+    // Segregated by concern
+    loadAdminRoutes(this.app);   // /api/admin/*
+    loadUserRoutes(this.app);    // /api/*  (user-facing)
 
     this.app.get("/", (_req, res) => {
       res.json({ message: MESSAGES.APP.BACKEND_RUNNING });
