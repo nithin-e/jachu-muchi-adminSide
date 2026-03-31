@@ -38,8 +38,10 @@ function scoreDocument(doc: ICourseDocument, normalizedSearch: string): number {
     doc.name,
     doc.type,
     doc.duration,
-    doc.keyDetails,
+    doc.CourseOverview,
     doc.eligibility,
+    doc.university,
+    doc.college,
   ];
   let max = 0;
   for (const value of searchableValues) {
@@ -55,8 +57,14 @@ export class CourseRepository implements ICourseRepository {
       name: payload.name,
       type: payload.type,
       duration: payload.duration,
-      keyDetails: payload.keyDetails,
+      CourseOverview: payload.CourseOverview,
       eligibility: payload.eligibility,
+      university: payload.university,
+      college: payload.college,
+      courseRoll: payload.courseRoll,
+      ...(payload.syllabus ? { syllabus: payload.syllabus } : {}),
+      ...(payload.courseHighlights ? { courseHighlights: payload.courseHighlights } : {}),
+      ...(payload.careerOutcomes ? { careerOutcomes: payload.careerOutcomes } : {}),
       ...(payload.status !== undefined ? { status: payload.status } : {}),
       ...(payload.imageUrl ? { imageUrl: payload.imageUrl } : {}),
     });
@@ -75,9 +83,21 @@ export class CourseRepository implements ICourseRepository {
       name: payload.name,
       type: payload.type,
       duration: payload.duration,
-      keyDetails: payload.keyDetails,
+      CourseOverview: payload.CourseOverview,
       eligibility: payload.eligibility,
+      university: payload.university,
+      college: payload.college,
+      courseRoll: payload.courseRoll,
     };
+    if (payload.syllabus !== undefined) {
+      set.syllabus = payload.syllabus;
+    }
+    if (payload.courseHighlights !== undefined) {
+      set.courseHighlights = payload.courseHighlights;
+    }
+    if (payload.careerOutcomes !== undefined) {
+      set.careerOutcomes = payload.careerOutcomes;
+    }
     if (payload.status !== undefined) {
       set.status = payload.status;
     }

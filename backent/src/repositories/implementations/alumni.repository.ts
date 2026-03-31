@@ -8,6 +8,7 @@ export class AlumniRepository implements IAlumniRepository {
       name: payload.name,
       role: payload.role,
       company: payload.company,
+      place: payload.place,
       ...(payload.profileImageUrl
         ? { profileImageUrl: payload.profileImageUrl }
         : {}),
@@ -27,6 +28,7 @@ export class AlumniRepository implements IAlumniRepository {
       name: payload.name,
       role: payload.role,
       company: payload.company,
+      place: payload.place,
     };
     if (payload.profileImageUrl !== undefined) {
       set.profileImageUrl = payload.profileImageUrl;
@@ -81,6 +83,7 @@ export class AlumniRepository implements IAlumniRepository {
         { name: { $regex: regex } },
         { role: { $regex: regex } },
         { company: { $regex: regex } },
+        { place: { $regex: regex } },
       ];
     }
 

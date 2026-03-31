@@ -2,6 +2,7 @@ export interface CreateAlumniInput {
   name: string;
   role: string;
   company: string;
+  place: string;
   profileImageUrl?: string;
 }
 
@@ -10,5 +11,6 @@ export interface UpdateAlumniInput {
   name: string;
   role: string;
   company: string;
+  place: string;
   profileImageUrl?: string;
 }

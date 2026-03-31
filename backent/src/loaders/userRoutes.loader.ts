@@ -4,6 +4,7 @@ import enquiryRoutes from "../routes/user/enquiry.routes";
 import courseRoutes from "../routes/user/course.routes";
 import alumniRoutes from "../routes/user/alumni.routes";
 import outreachRouter from "../routes/user/outreachRoutes";
+import galleryRouter from "../routes/user/gallery.route";
 
 export function loadUserRoutes(app: Application): void {
   // Public routes — no auth required
@@ -13,4 +14,5 @@ export function loadUserRoutes(app: Application): void {
 
   // Authenticated user routes
   app.use("/api/enquiries", authenticateToken, enquiryRoutes);
+  app.use("/api/gallery", galleryRouter);
 }

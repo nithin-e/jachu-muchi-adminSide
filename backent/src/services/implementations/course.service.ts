@@ -31,15 +31,24 @@ export class CourseService implements ICourseService {
     const name = input.name?.trim();
     const type = input.type?.trim();
     const duration = input.duration?.trim();
-    const keyDetails = input.keyDetails?.trim();
+    const CourseOverview = input.CourseOverview?.trim();
     const eligibility = input.eligibility?.trim();
+    const university = input.university?.trim();
+    const college = input.college?.trim();
+    const courseRoll = input.courseRoll?.trim();
+    const syllabus = input.syllabus?.trim();
+    const courseHighlights = input.courseHighlights?.trim();
+    const careerOutcomes = input.careerOutcomes?.trim();
     const status = input.status;
 
     if (!name) throwBadRequest(MESSAGES.COURSE.NAME_REQUIRED);
     if (!type) throwBadRequest(MESSAGES.COURSE.TYPE_REQUIRED);
     if (!duration) throwBadRequest(MESSAGES.COURSE.DURATION_REQUIRED);
-    if (!keyDetails) throwBadRequest(MESSAGES.COURSE.KEY_DETAILS_REQUIRED);
+    if (!CourseOverview) throwBadRequest("Course overview is required");
     if (!eligibility) throwBadRequest(MESSAGES.COURSE.ELIGIBILITY_REQUIRED);
+    if (!university) throwBadRequest("University is required");
+    if (!college) throwBadRequest("College is required");
+    if (!courseRoll) throwBadRequest("Course roll/writeup is required");
 
     if (status !== undefined) {
       if (!COURSE_STATUS_VALUES.includes(status)) {
@@ -53,8 +62,14 @@ export class CourseService implements ICourseService {
       name,
       type,
       duration,
-      keyDetails,
+      CourseOverview,
       eligibility,
+      university,
+      college,
+      courseRoll,
+      ...(syllabus ? { syllabus } : {}),
+      ...(courseHighlights ? { courseHighlights } : {}),
+      ...(careerOutcomes ? { careerOutcomes } : {}),
       ...(status !== undefined ? { status } : {}),
       ...(input.imageUrl?.trim()
         ? { imageUrl: input.imageUrl.trim() }
@@ -73,15 +88,24 @@ export class CourseService implements ICourseService {
     const name = input.name?.trim();
     const type = input.type?.trim();
     const duration = input.duration?.trim();
-    const keyDetails = input.keyDetails?.trim();
+    const CourseOverview = input.CourseOverview?.trim();
     const eligibility = input.eligibility?.trim();
+    const university = input.university?.trim();
+    const college = input.college?.trim();
+    const courseRoll = input.courseRoll?.trim();
+    const syllabus = input.syllabus?.trim();
+    const courseHighlights = input.courseHighlights?.trim();
+    const careerOutcomes = input.careerOutcomes?.trim();
     const status = input.status;
 
     if (!name) throwBadRequest(MESSAGES.COURSE.NAME_REQUIRED);
     if (!type) throwBadRequest(MESSAGES.COURSE.TYPE_REQUIRED);
     if (!duration) throwBadRequest(MESSAGES.COURSE.DURATION_REQUIRED);
-    if (!keyDetails) throwBadRequest(MESSAGES.COURSE.KEY_DETAILS_REQUIRED);
+    if (!CourseOverview) throwBadRequest("Course overview is required");
     if (!eligibility) throwBadRequest(MESSAGES.COURSE.ELIGIBILITY_REQUIRED);
+    if (!university) throwBadRequest("University is required");
+    if (!college) throwBadRequest("College is required");
+    if (!courseRoll) throwBadRequest("Course roll/writeup is required");
 
     if (status !== undefined) {
       if (!COURSE_STATUS_VALUES.includes(status)) {
@@ -100,8 +124,14 @@ export class CourseService implements ICourseService {
       name,
       type,
       duration,
-      keyDetails,
+      CourseOverview,
       eligibility,
+      university,
+      college,
+      courseRoll,
+      ...(syllabus ? { syllabus } : {}),
+      ...(courseHighlights ? { courseHighlights } : {}),
+      ...(careerOutcomes ? { careerOutcomes } : {}),
       ...(status !== undefined ? { status } : {}),
       ...(input.imageUrl !== undefined
         ? { imageUrl: input.imageUrl?.trim() || undefined }
