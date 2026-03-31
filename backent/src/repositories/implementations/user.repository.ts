@@ -8,8 +8,7 @@ export class UserRepository implements IUserRepository {
     const normalizedEmail = email.trim().toLowerCase();
     const user = await UserModel.findOne({ email: normalizedEmail })
 
-    console.log("user found.......",user);  
-    console.log("user normalizedEmail.......",normalizedEmail);  
+   
     if (!user) {
       console.log("user not found.......");
       return null;

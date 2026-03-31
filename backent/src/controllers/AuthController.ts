@@ -8,7 +8,7 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction){
     try {
 
-      console.log("logineeeeeeeeeeeeeeeeee", req.body);
+     
       
       const { email, password } = req.body;
       const result = await this.authService.login({ email, password });

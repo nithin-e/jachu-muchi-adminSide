@@ -16,9 +16,7 @@ export class AuthService implements IAuthService {
   async login(payload: LoginRequest): Promise<LoginResult> {
     const user = await this.userRepository.findByEmail(payload.email);
 
-    console.log("user will be here showen");
-    console.log(user);
-    console.log(payload.email);
+   
     if (!user) {
       return {
         ok: false,

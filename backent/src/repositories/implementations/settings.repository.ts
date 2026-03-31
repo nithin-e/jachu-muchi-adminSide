@@ -14,7 +14,13 @@ export class SettingsRepository implements ISettingsRepository {
     if (existing) {
       existing.whatsAppNumber = payload.whatsAppNumber;
       existing.adminEmail = payload.adminEmail;
-      existing.notificationEmails = payload.notificationEmails;
+      // Merge new notification emails with existing ones, avoiding duplicates
+      const existingEmails = new Set(
+        existing.notificationEmails.map((e) => e.toLowerCase())
+      );
+      const newEmails = payload.notificationEmails.map((e) => e.toLowerCase());
+      const mergedEmails = Array.from(new Set([...existingEmails, ...newEmails]));
+      existing.notificationEmails = mergedEmails;
       return existing.save();
     }
 

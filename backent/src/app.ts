@@ -20,6 +20,7 @@ import { errorMiddleware } from "./middlewares/error.middleware";
 import { logRequest } from "./middlewares/logger.middleware";
 import { rateLimit } from "./middlewares/rate-limit.middleware";
 import { MESSAGES } from "./constants/messages";
+import outreachRouter from "./routes/outreachRoutes";
 
 class AppServer {
   public app: Application;
@@ -55,6 +56,7 @@ class AppServer {
     this.app.use("/api/banners", authenticateToken, bannerRoutes);
     this.app.use("/api/users", authenticateToken, userManagementRoutes);
     this.app.use("/api/settings", authenticateToken, settingsRoutes);
+    this.app.use("/api/enquiry", outreachRouter);
 
     this.app.get("/", (_req, res) => {
       res.json({ message: MESSAGES.APP.BACKEND_RUNNING });
