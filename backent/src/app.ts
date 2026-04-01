@@ -37,8 +37,8 @@ class AppServer {
     this.app.use("/api/admin/auth", authRoutes);
 
     // Segregated by concern
-    loadAdminRoutes(this.app);   // /api/admin/*
-    loadUserRoutes(this.app);    // /api/*  (user-facing)
+    loadAdminRoutes(this.app);  
+    loadUserRoutes(this.app);    
 
     this.app.get("/", (_req, res) => {
       res.json({ message: MESSAGES.APP.BACKEND_RUNNING });
