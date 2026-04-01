@@ -20,6 +20,12 @@ export function mapBodyToCreateAlumniInput(
     (typeof body.employer === "string" && body.employer) ||
     "";
 
+  const place =
+    (typeof body.place === "string" && body.place) ||
+    (typeof body.city === "string" && body.city) ||
+    (typeof body.location === "string" && body.location) ||
+    "";
+
   const explicitUrl =
     typeof body.profileImageUrl === "string" ? body.profileImageUrl : undefined;
 
@@ -27,6 +33,7 @@ export function mapBodyToCreateAlumniInput(
     name,
     role,
     company,
+    place,
     ...(profileImageUrl
       ? { profileImageUrl }
       : explicitUrl?.trim()

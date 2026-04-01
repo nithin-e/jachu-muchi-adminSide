@@ -66,6 +66,8 @@ export const MESSAGES = {
 
     TITLE_REQUIRED: "Title is required",
     DESCRIPTION_REQUIRED: "Description is required",
+    CATEGORY_REQUIRED: "Category is required",
+    DETAILS_REQUIRED: "Details are required",
     VALID_DATE_REQUIRED: "Valid date is required",
     STATUS_MUST_BE_PUBLISHED_OR_DRAFT: "Status must be Published or Draft",
 

@@ -79,15 +79,18 @@ export class AlumniService implements IAlumniService {
     const name = input.name?.trim() ?? "";
     const role = input.role?.trim() ?? "";
     const company = input.company?.trim() ?? "";
+    const place = input.place?.trim() ?? "";
 
     if (!name) throwBadRequest(MESSAGES.ALUMNI.NAME_REQUIRED);
     if (!role) throwBadRequest(MESSAGES.ALUMNI.ROLE_REQUIRED);
     if (!company) throwBadRequest(MESSAGES.ALUMNI.COMPANY_REQUIRED);
+    if (!place) throwBadRequest("Place/City is required");
 
     return {
       name,
       role,
       company,
+      place,
       ...(input.profileImageUrl?.trim()
         ? { profileImageUrl: input.profileImageUrl.trim() }
         : {}),

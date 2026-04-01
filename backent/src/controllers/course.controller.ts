@@ -29,13 +29,36 @@ function mapBodyToCreateInput(
   const duration =
     typeof body.duration === "string" ? body.duration : "";
 
-  const keyDetails =
-    (typeof body.keyDetails === "string" && body.keyDetails) ||
-    (typeof body.details === "string" && body.details) ||
+  const CourseOverview =
+    (typeof body.CourseOverview === "string" && body.CourseOverview) ||
+    (typeof body.courseOverview === "string" && body.courseOverview) ||
+    (typeof body.overview === "string" && body.overview) ||
     "";
 
   const eligibility =
     typeof body.eligibility === "string" ? body.eligibility : "";
+
+  const university =
+    (typeof body.university === "string" && body.university) ||
+    "";
+
+  const college =
+    (typeof body.college === "string" && body.college) ||
+    "";
+
+  const courseRoll =
+    (typeof body.courseRoll === "string" && body.courseRoll) ||
+    (typeof body.roll === "string" && body.roll) ||
+    "";
+
+  const syllabus =
+    typeof body.syllabus === "string" ? body.syllabus : undefined;
+
+  const courseHighlights =
+    typeof body.courseHighlights === "string" ? body.courseHighlights : undefined;
+
+  const careerOutcomes =
+    typeof body.careerOutcomes === "string" ? body.careerOutcomes : undefined;
 
   const statusCandidate =
     (typeof body.status === "string" && body.status) ||
@@ -54,8 +77,14 @@ function mapBodyToCreateInput(
     name,
     type,
     duration,
-    keyDetails,
+    CourseOverview,
     eligibility,
+    university,
+    college,
+    courseRoll,
+    ...(syllabus ? { syllabus } : {}),
+    ...(courseHighlights ? { courseHighlights } : {}),
+    ...(careerOutcomes ? { careerOutcomes } : {}),
     ...(status !== undefined ? { status } : {}),
     ...(imageUrl
       ? { imageUrl }
