@@ -3,6 +3,6 @@ import { getAllGalleryInitial } from "../../controllers/gallery.controller";
 
 const galleryRouter = Router();
 
-galleryRouter.post("/all", getAllGalleryInitial);
+galleryRouter.get("/all", getAllGalleryInitial);
 
 export default galleryRouter;
