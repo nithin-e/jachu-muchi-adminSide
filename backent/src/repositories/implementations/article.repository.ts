@@ -16,6 +16,8 @@ export class ArticleRepository implements IArticleRepository {
     const doc = new ArticleModel({
       title: payload.title,
       description: payload.description,
+      category: payload.category,
+      details: payload.details,
       articleDate: payload.articleDate,
       status: payload.status,
       ...(payload.imageUrl ? { imageUrl: payload.imageUrl } : {}),
@@ -34,6 +36,8 @@ export class ArticleRepository implements IArticleRepository {
     const set: Record<string, unknown> = {
       title: payload.title,
       description: payload.description,
+      category: payload.category,
+      details: payload.details,
       articleDate: payload.articleDate,
       status: payload.status,
     };
@@ -88,6 +92,8 @@ export class ArticleRepository implements IArticleRepository {
       mongoQuery.$or = [
         { title: { $regex: regex } },
         { description: { $regex: regex } },
+        { category: { $regex: regex } },
+        { details: { $regex: regex } },
       ];
     }
 

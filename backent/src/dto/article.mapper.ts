@@ -40,6 +40,17 @@ export function mapBodyToCreateArticleInput(
     (typeof body.summary === "string" && body.summary) ||
     "";
 
+  const category =
+    (typeof body.category === "string" && body.category) ||
+    (typeof body.articleCategory === "string" && body.articleCategory) ||
+    "";
+
+  const details =
+    (typeof body.details === "string" && body.details) ||
+    (typeof body.content === "string" && body.content) ||
+    (typeof body.body === "string" && body.body) ||
+    "";
+
   const articleDate =
     parseArticleDate(body.articleDate ?? body.date ?? body.publishedAt) ??
     new Date(NaN);
@@ -52,6 +63,8 @@ export function mapBodyToCreateArticleInput(
   return {
     title,
     description,
+    category,
+    details,
     articleDate,
     status,
     ...(imageUrl

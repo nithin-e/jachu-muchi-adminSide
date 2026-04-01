@@ -15,6 +15,8 @@ export const ARTICLE_STATUS_VALUES: ArticleStatus[] = [
 export interface IArticleDocument extends Document {
   title: string;
   description: string;
+  category: string;  // New field: Article category (e.g., "Campus", "Event", "News")
+  details: string;   // New field: Detailed HTML content
   articleDate: Date;
   status: ArticleStatus;
   imageUrl?: string;
@@ -26,6 +28,8 @@ const articleSchema = new Schema<IArticleDocument>(
   {
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
+    category: { type: String, required: true, trim: true },
+    details: { type: String, required: true },
     articleDate: { type: Date, required: true },
     status: {
       type: String,

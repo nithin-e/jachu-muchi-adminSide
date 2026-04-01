@@ -165,11 +165,15 @@ export class ArticleService implements IArticleService {
   ): CreateArticleInput {
     const title = input.title?.trim() ?? "";
     const description = input.description?.trim() ?? "";
+    const category = input.category?.trim() ?? "";
+    const details = input.details?.trim() ?? "";
     const articleDate = input.articleDate;
     const status = input.status;
 
     if (!title) throwBadRequest(MESSAGES.ARTICLE.TITLE_REQUIRED);
     if (!description) throwBadRequest(MESSAGES.ARTICLE.DESCRIPTION_REQUIRED);
+    if (!category) throwBadRequest(MESSAGES.ARTICLE.CATEGORY_REQUIRED);
+    if (!details) throwBadRequest(MESSAGES.ARTICLE.DETAILS_REQUIRED);
     if (!articleDate || Number.isNaN(articleDate.getTime())) {
       throwBadRequest(MESSAGES.ARTICLE.VALID_DATE_REQUIRED);
     }
@@ -180,6 +184,8 @@ export class ArticleService implements IArticleService {
     return {
       title,
       description,
+      category,
+      details,
       articleDate,
       status,
       ...(input.imageUrl?.trim()
