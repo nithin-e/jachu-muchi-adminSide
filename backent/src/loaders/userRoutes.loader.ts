@@ -7,6 +7,7 @@ import outreachRouter from "../routes/user/outreachRoutes";
 import galleryRouter from "../routes/user/gallery.route";
 import testimonialRouter from "../routes/user/testimonial.routes";
 import bannerRouter from "../routes/user/banner.routes";
+import articleRouter from "../routes/user/article.routes";
 
 export function loadUserRoutes(app: Application): void {
   // Public routes — no auth required
@@ -19,5 +20,6 @@ export function loadUserRoutes(app: Application): void {
   app.use("/api/gallery", galleryRouter);
     app.use("/api/testimonials", testimonialRouter);
     app.use("/api/banners", bannerRouter);
+    app.use('/api/articles',articleRouter)
 
 }
