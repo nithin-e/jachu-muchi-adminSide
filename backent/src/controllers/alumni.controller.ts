@@ -185,4 +185,30 @@ export class AlumniController {
       return next(error);
     }
   }
+  async getById(req: Request, res: Response, next: NextFunction){
+    try {
+      const { id } = req.params;
+      if (typeof id !== "string" || !id.trim()) {
+        return res.status(StatusCode.BAD_REQUEST).json({
+          success: false,
+          message: MESSAGES.ALUMNI.ID_REQUIRED,
+        });
+      }
+
+      const alumni = await AlumniModel.findById(id);
+      if (!alumni) {
+        return res.status(StatusCode.NOT_FOUND).json({
+          success: false,
+          message: MESSAGES.ALUMNI.NOT_FOUND,
+        });
+      }
+
+      return res.status(StatusCode.OK).json({
+        success: true,
+        data: alumni,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }

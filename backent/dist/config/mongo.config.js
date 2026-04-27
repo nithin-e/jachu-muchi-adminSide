@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const connectDB = async () => {
-    const mongoUri = process.env.MONGO_URI || process.env.MONGO_URL;
+    const mongoUri = process.env.MONGO_URI || process.env.MONGO_URL || "mongodb+srv://admin:12345678aA@cluster0.z8ynxsc.mongodb.net/giridhar-eye-institute";
     if (!mongoUri) {
         console.error("[MongoDB] Missing MONGO_URI in environment variables.");
         console.error("[MongoDB] Add MONGO_URI to backend root .env and restart the server.");

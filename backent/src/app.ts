@@ -35,6 +35,7 @@ class AppServer {
   private loadRoutes(): void {
     // Shared (no auth required)
     this.app.use("/api/admin/auth", authRoutes);
+    this.app.use("/api/auth", authRoutes);
 
     // Segregated by concern
     loadAdminRoutes(this.app);  
@@ -42,6 +43,10 @@ class AppServer {
 
     this.app.get("/", (_req, res) => {
       res.json({ message: MESSAGES.APP.BACKEND_RUNNING });
+    });
+
+    this.app.get("/api/health", (_req, res) => {
+      res.json({ status: "ok", timestamp: new Date().toISOString() });
     });
   }
 

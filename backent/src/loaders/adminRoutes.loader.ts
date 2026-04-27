@@ -16,6 +16,7 @@ export function loadAdminRoutes(app: Application): void {
   app.use("/api/admin/banners", authenticateToken, bannerRoutes);
   app.use("/api/admin/articles", authenticateToken, articleRoutes);
   app.use("/api/admin/categories", authenticateToken, categoryRoutes);
+  app.use("/api/categories", authenticateToken, categoryRoutes);
   app.use("/api/admin/courses", authenticateToken, courseRoutes);
   app.use("/api/admin/gallery", authenticateToken, galleryRoutes);
   app.use("/api/admin/alumni", authenticateToken, alumniRoutes);

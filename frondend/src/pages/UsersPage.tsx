@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { MOCK_USERS } from "@/lib/mock-data";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, Plus, Search, Pencil, Trash2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DeleteModal from "@/components/shared/DeleteModal";
 import { Button } from "@/components/ui/button";
@@ -7,26 +7,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  createManagedUser,
+  deleteManagedUserApi,
+  getManagedUsers,
+  updateManagedUserApi,
+  type ManagedUser,
+  type ManagedUserRole,
+  type ManagedUserStatus,
+} from "@/api/services/managedUser.service";
 
-type UserRole = "Admin" | "Sub Admin" | "Editor";
-type UserStatus = "Active" | "Inactive";
-
-interface ManagedUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  status: UserStatus;
-}
-
-const roleClasses: Record<UserRole, string> = {
+const roleClasses: Record<ManagedUserRole, string> = {
   Admin: "border border-emerald-500/30 bg-emerald-500/15 text-emerald-300",
   "Sub Admin": "border border-blue-500/30 bg-blue-500/15 text-blue-300",
   Editor: "border border-purple-500/30 bg-purple-500/15 text-purple-300",
 };
 
-const statusClasses: Record<UserStatus, string> = {
+const statusClasses: Record<ManagedUserStatus, string> = {
   Active: "border border-green-500/30 bg-green-500/15 text-green-300",
   Inactive: "border border-white/15 bg-white/10 text-gray-400",
 };
@@ -34,25 +40,36 @@ const statusClasses: Record<UserStatus, string> = {
 const emptyForm = {
   name: "",
   email: "",
-  role: "Sub Admin" as UserRole,
-  status: "Active" as UserStatus,
+  role: "Sub Admin" as ManagedUserRole,
+  status: "Active" as ManagedUserStatus,
 };
 
-const seedUsers: ManagedUser[] = MOCK_USERS.map((user, index) => ({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  role: index % 3 === 0 ? "Admin" : index % 3 === 1 ? "Sub Admin" : "Editor",
-  status: index % 4 === 0 ? "Inactive" : "Active",
-}));
-
 const UsersPage = () => {
-  const [users, setUsers] = useState<ManagedUser[]>(seedUsers);
+  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ManagedUser | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
+
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        setUsers(await getManagedUsers());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    void load();
+  }, []);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -62,6 +79,19 @@ const UsersPage = () => {
       user.role.toLowerCase().includes(query)
     );
   }, [users, search]);
+
+  const totalPages = useMemo(() => {
+    const total = Math.ceil(filteredUsers.length / pageSize);
+    return total > 0 ? total : 1;
+  }, [filteredUsers.length, pageSize]);
+
+  useEffect(() => setPage(1), [search, pageSize]);
+  useEffect(() => setPage((p) => Math.min(p, totalPages)), [totalPages]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, page, pageSize]);
 
   const openAdd = () => {
     setEditing(null);
@@ -80,48 +110,72 @@ const UsersPage = () => {
     setFormOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim() || !form.email.trim()) return;
-
-    if (editing) {
-      setUsers((prev) =>
-        prev.map((user) => user.id === editing.id ? { ...user, ...form } : user),
-      );
-    } else {
-      setUsers((prev) => [
-        { id: Date.now().toString(), ...form },
-        ...prev,
-      ]);
+    setSaving(true);
+    try {
+      if (editing) {
+        await updateManagedUserApi(editing.id, form);
+        setUsers((prev) =>
+          prev.map((user) => user.id === editing.id ? { ...user, ...form } : user),
+        );
+      } else {
+        const created = await createManagedUser(form);
+        setUsers((prev) => [created, ...prev]);
+      }
+      setFormOpen(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
     }
-    setFormOpen(false);
   };
 
-  const handleDelete = () => {
-    if (deleteId) {
-      setUsers((prev) => prev.filter((user) => user.id !== deleteId));
-    }
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setUsers((prev) => prev.filter((user) => user.id !== deleteId));
     setDeleteId(null);
+    try {
+      await deleteManagedUserApi(deleteId);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const updateRole = (id: string, role: UserRole) => {
-    setUsers((prev) => prev.map((user) => (user.id === id ? { ...user, role } : user)));
+  const updateRole = async (id: string, role: ManagedUserRole) => {
+    const user = users.find((u) => u.id === id);
+    if (!user) return;
+    const next = { ...user, role };
+    setUsers((prev) => prev.map((u) => (u.id === id ? next : u)));
+    try {
+      await updateManagedUserApi(id, next);
+    } catch (e) {
+      console.error(e);
+      setUsers((prev) => prev.map((u) => (u.id === id ? user : u)));
+    }
   };
 
-  const toggleStatus = (id: string) => {
+  const toggleStatus = async (id: string) => {
+    const user = users.find((u) => u.id === id);
+    if (!user) return;
+    const status: ManagedUserStatus = user.status === "Active" ? "Inactive" : "Active";
+    const next = { ...user, status };
     setUsers((prev) =>
-      prev.map((user) =>
-        user.id === id
-          ? { ...user, status: user.status === "Active" ? "Inactive" : "Active" }
-          : user,
-      ),
+      prev.map((u) => (u.id === id ? next : u)),
     );
+    try {
+      await updateManagedUserApi(id, next);
+    } catch (e) {
+      console.error(e);
+      setUsers((prev) => prev.map((u) => (u.id === id ? user : u)));
+    }
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="User Management"
-        description={`${users.length} admin users`}
+        description={isLoading ? "Loading…" : `${users.length} admin users`}
         action={(
           <Button onClick={openAdd} size="sm">
             <Plus className="mr-1 h-4 w-4" />
@@ -130,25 +184,58 @@ const UsersPage = () => {
         )}
       />
 
-      <div className="max-w-sm">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
-          <Input
-            placeholder="Search users..."
-            className="pl-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="max-w-sm w-full">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
+            <Input
+              placeholder="Search users..."
+              className="pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => {
+              setPageSize(Number(value));
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-10 w-full rounded-lg border border-white/20 bg-white/10 text-white backdrop-blur-lg hover:bg-white/10 data-[placeholder]:text-gray-300 sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border border-white/10 bg-slate-900 text-white">
+              {[6, 9, 12].map((size) => (
+                <SelectItem
+                  key={size}
+                  value={String(size)}
+                  className="focus:bg-white/10 focus:text-white data-[state=checked]:bg-blue-500/20 data-[state=checked]:text-blue-200"
+                >
+                  {size}/page
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {filteredUsers.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center gap-2 py-16 text-gray-400">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span className="text-sm">Loading users…</span>
+        </div>
+      ) : filteredUsers.length === 0 ? (
         <div className="rounded-xl border border-dashed border-white/20 bg-white/10 p-8 text-center text-sm text-white/60 backdrop-blur-lg">
           No users found.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredUsers.map((user) => (
+        <>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedUsers.map((user) => (
             <div
               key={user.id}
               className="rounded-xl border border-white/20 bg-white/10 p-5 shadow-lg backdrop-blur-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
@@ -168,7 +255,7 @@ const UsersPage = () => {
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <Select value={user.role} onValueChange={(value) => updateRole(user.id, value as UserRole)}>
+                <Select value={user.role} onValueChange={(value) => void updateRole(user.id, value as ManagedUserRole)}>
                   <SelectTrigger aria-label={`Change role for ${user.name}`} className="h-9 rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs text-white backdrop-blur-lg hover:bg-white/10 data-[placeholder]:text-gray-300">
                     <SelectValue />
                   </SelectTrigger>
@@ -179,7 +266,7 @@ const UsersPage = () => {
                   </SelectContent>
                 </Select>
 
-                <Button type="button" variant="outline" size="sm" onClick={() => toggleStatus(user.id)}>
+                <Button type="button" variant="outline" size="sm" onClick={() => void toggleStatus(user.id)}>
                   {user.status === "Active" ? "Deactivate" : "Activate"}
                 </Button>
               </div>
@@ -201,8 +288,100 @@ const UsersPage = () => {
                 </Button>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {totalPages > 1 ? (
+            <div className="pt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPage((p) => Math.max(1, p - 1));
+                      }}
+                      className={page <= 1 ? "pointer-events-none opacity-50" : undefined}
+                    />
+                  </PaginationItem>
+                  {(() => {
+                    const window = 2;
+                    const start = Math.max(1, page - window);
+                    const end = Math.min(totalPages, page + window);
+                    const showLeftEllipsis = start > 1;
+                    const showRightEllipsis = end < totalPages;
+                    const pagesToShow: number[] = [];
+                    for (let p = start; p <= end; p++) pagesToShow.push(p);
+                    return (
+                      <>
+                        {showLeftEllipsis ? (
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(1);
+                              }}
+                              isActive={page === 1}
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                        ) : null}
+                        {showLeftEllipsis ? <PaginationEllipsis /> : null}
+                        {pagesToShow.map((p) => (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(p);
+                              }}
+                              isActive={p === page}
+                            >
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        {showRightEllipsis ? <PaginationEllipsis /> : null}
+                        {showRightEllipsis ? (
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(totalPages);
+                              }}
+                              isActive={page === totalPages}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ) : null}
+                      </>
+                    );
+                  })()}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPage((p) => Math.min(totalPages, p + 1));
+                      }}
+                      className={page >= totalPages ? "pointer-events-none opacity-50" : undefined}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+              <div className="mt-3 text-center text-sm text-gray-400">
+                Showing{" "}
+                {Math.min((page - 1) * pageSize + 1, filteredUsers.length)}-
+                {Math.min(page * pageSize, filteredUsers.length)} of {filteredUsers.length}
+              </div>
+            </div>
+          ) : null}
+        </>
       )}
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
@@ -222,7 +401,7 @@ const UsersPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-white/80">Role</Label>
-                <Select value={form.role} onValueChange={(value) => setForm({ ...form, role: value as UserRole })}>
+                <Select value={form.role} onValueChange={(value) => setForm({ ...form, role: value as ManagedUserRole })}>
                   <SelectTrigger className="h-10 rounded-lg border border-white/20 bg-white/10 text-white backdrop-blur-lg hover:bg-white/10 data-[placeholder]:text-gray-300">
                     <SelectValue />
                   </SelectTrigger>
@@ -235,7 +414,7 @@ const UsersPage = () => {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-white/80">Status</Label>
-                <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value as UserStatus })}>
+                <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value as ManagedUserStatus })}>
                   <SelectTrigger className="h-10 rounded-lg border border-white/20 bg-white/10 text-white backdrop-blur-lg hover:bg-white/10 data-[placeholder]:text-gray-300">
                     <SelectValue />
                   </SelectTrigger>
@@ -246,7 +425,8 @@ const UsersPage = () => {
                 </Select>
               </div>
             </div>
-            <Button onClick={handleSave} className="w-full">
+            <Button disabled={saving} onClick={() => void handleSave()} className="w-full">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {editing ? "Update" : "Add"} User
             </Button>
           </div>

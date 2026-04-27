@@ -103,6 +103,8 @@ export class CourseController {
    */
   async listAll(_req: Request, res: Response, next: NextFunction){
     try {
+      console.log('broooooooooooooooooooooooooooooo');
+      
       const data: ICourseDocument[] = await CourseModel.find()
         .sort({ createdAt: -1 })
         .lean();
