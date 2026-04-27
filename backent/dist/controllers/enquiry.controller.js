@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnquiryController = void 0;
+const Enquiry_1 = require("../models/Enquiry");
 const statusCodes_1 = require("../constants/statusCodes");
 const messages_1 = require("../constants/messages");
 class EnquiryController {
@@ -22,10 +23,12 @@ class EnquiryController {
             ? Number(limitRaw)
             : 10;
         const search = typeof searchRaw === "string" ? searchRaw : undefined;
-        const status = typeof statusRaw === "string" && statusRaw.trim()
-            ? statusRaw.trim()
+        const statusValue = typeof statusRaw === "string" ? statusRaw.trim() : undefined;
+        const status = statusValue && Enquiry_1.ENQUIRY_STATUS_VALUES.includes(statusValue)
+            ? statusValue
             : undefined;
-        const type = typeof typeRaw === "string" && typeRaw.trim() ? typeRaw.trim() : undefined;
+        const typeRawValue = typeof typeRaw === "string" ? typeRaw.trim() : undefined;
+        const type = typeRawValue && typeRawValue !== "All" ? typeRawValue : undefined;
         const sortBy = typeof sortByRaw === "string" && sortByRaw.trim()
             ? sortByRaw.trim()
             : "date";
@@ -36,10 +39,10 @@ class EnquiryController {
     }
     mapListResponseData(input) {
         return input.map((doc) => {
-            const { createdAt, updatedAt, course, notes, __v, ...rest } = doc;
+            const { createdAt, updatedAt, __v, ...rest } = doc;
             return {
                 ...rest,
-                date: createdAt,
+                date: createdAt || doc.date,
             };
         });
     }

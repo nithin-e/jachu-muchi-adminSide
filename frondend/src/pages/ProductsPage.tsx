@@ -1,41 +1,192 @@
-import { useMemo, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import DeleteModal from "@/components/shared/DeleteModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { Course, CourseStatus, listCourses, removeCourse, setCourseStatus } from "@/lib/course-store";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { deleteCourse, getCourses, type CourseListItem } from "@/api/services/course.service";
+
+const CARD_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect fill='%231e293b' width='400' height='200'/%3E%3Ctext x='50%25' y='50%25' fill='%2364748b' font-family='sans-serif' font-size='14' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+type CourseCardProps = {
+  course: CourseListItem;
+  onEdit: (id: string) => void;
+  onRequestDelete: (id: string) => void;
+};
+
+const CourseCard = memo(function CourseCard({ course, onEdit, onRequestDelete }: CourseCardProps) {
+  const name = course.courseName || "Untitled course";
+  const type = course.type || "General";
+  const keyDetails = course.keyDetails || "";
+  const duration = course.duration ?? "N/A";
+  const eligibility = course.eligibility?.trim() ? course.eligibility : "N/A";
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg transition-all duration-300 hover:shadow-2xl">
+      <div className="h-44 w-full overflow-hidden bg-slate-800">
+        <img
+          src={course.image || CARD_FALLBACK}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-44 w-full object-cover"
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (img.src !== CARD_FALLBACK) {
+              img.onerror = null;
+              img.src = CARD_FALLBACK;
+            }
+          }}
+        />
+      </div>
+
+      <div className="space-y-3 p-4">
+        <h3 className="text-lg font-semibold text-white">{name}</h3>
+
+        <span className="inline-block rounded-full bg-blue-500/20 px-2 py-1 text-xs text-blue-300">
+          {type}
+        </span>
+
+        <div className="space-y-1 text-sm text-gray-400">
+          <p>Duration: {duration}</p>
+          <p>Eligibility: {eligibility}</p>
+        </div>
+
+        <p className="line-clamp-2 text-sm text-gray-300">
+          {keyDetails || "No key details available."}
+        </p>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            type="button"
+            onClick={() => onEdit(course.id)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+            aria-label={`Edit ${name}`}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => onRequestDelete(course.id)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-red-700"
+            aria-label={`Delete ${name}`}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 const ProductsPage = () => {
   const navigate = useNavigate();
-  const [courses, setCourses] = useState<Course[]>(() => listCourses());
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const filtered = useMemo(() => courses.filter((p) =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    p.description.toLowerCase().includes(search.toLowerCase()) ||
-    p.duration.toLowerCase().includes(search.toLowerCase())
-  ), [courses, search]
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
+
+  const deferredSearch = useDeferredValue(search.trim().toLowerCase());
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+(async () => {
+      setLoading(true);
+      try {
+        const data = await getCourses(controller.signal);
+        if (!cancelled) setCourses(data);
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+        if (!cancelled) console.error(e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!deferredSearch) return courses;
+    return courses.filter((course) => {
+      const q = deferredSearch;
+      return (
+        course.courseName.toLowerCase().includes(q) ||
+        course.keyDetails.toLowerCase().includes(q) ||
+        course.type.toLowerCase().includes(q) ||
+        course.duration.toLowerCase().includes(q) ||
+        course.eligibility.toLowerCase().includes(q)
+      );
+    });
+  }, [courses, deferredSearch]);
+
+  const totalPages = useMemo(() => {
+    const total = Math.ceil(filtered.length / pageSize);
+    return total > 0 ? total : 1;
+  }, [filtered.length, pageSize]);
+
+  useEffect(() => setPage(1), [deferredSearch, pageSize]);
+  useEffect(() => setPage((p) => Math.min(p, totalPages)), [totalPages]);
+
+  const paginatedCourses = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
+
+  const onEdit = useCallback(
+    (id: string) => {
+      const selectedCourse = courses.find((course) => course.id === id);
+      navigate(`/courses/edit/${id}`, {
+        state: selectedCourse ? { course: selectedCourse } : undefined,
+      });
+    },
+    [courses, navigate],
   );
 
-  const handleDelete = () => {
-    if (deleteId) {
-      removeCourse(deleteId);
-      setCourses(listCourses());
+  const onRequestDelete = useCallback((id: string) => {
+    setDeleteId(id);
+  }, []);
+
+  const handleDelete = async () => {
+    if (deleteId === null) return;
+    try {
+      await deleteCourse(String(deleteId));
+      setCourses((prev) => prev.filter((course) => course.id !== deleteId));
+      setDeleteId(null);
+    } catch (error) {
+      console.error(error);
     }
-    setDeleteId(null);
   };
 
-  const updateStatus = (id: string, status: CourseStatus) => {
-    setCourseStatus(id, status);
-    setCourses(listCourses());
-  };
-
-  const toggleStatus = (id: string, current: CourseStatus) => {
-    updateStatus(id, current === "Active" ? "Inactive" : "Active");
-  };
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 p-12 text-gray-400">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="text-sm">Loading courses…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -50,10 +201,37 @@ const ProductsPage = () => {
         )}
       />
 
-      <div className="mb-4 max-w-xs">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
-          <Input placeholder="Search courses..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="max-w-xs">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
+            <Input
+              placeholder="Search courses…"
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+        </div>
+
+        <div className="flex w-full items-center justify-end md:w-auto">
+          <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
+            <SelectTrigger className="h-10 w-full rounded-lg border border-white/20 bg-white/10 text-white backdrop-blur-lg hover:bg-white/10 data-[placeholder]:text-gray-300 sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border border-white/10 bg-slate-900 text-white">
+              {[6, 9, 12].map((size) => (
+                <SelectItem
+                  key={size}
+                  value={String(size)}
+                  className="focus:bg-white/10 focus:text-white data-[state=checked]:bg-blue-500/20 data-[state=checked]:text-blue-200"
+                >
+                  {size}/page
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -62,79 +240,127 @@ const ProductsPage = () => {
           No courses found
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              className="group overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-[#0f172a] to-[#1e293b] shadow-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-2xl"
-            >
-              <div className="relative h-44 w-full overflow-hidden rounded-t-xl">
-                {p.image ? (
-                  <img src={p.image} alt={p.title} className="h-44 w-full object-cover" />
-                ) : (
-                  <div className="flex h-44 w-full items-center justify-center bg-white/[0.06] text-xs font-medium text-gray-500">
-                    No Image
-                  </div>
-                )}
-                <div className="pointer-events-none absolute inset-0 rounded-t-xl bg-gradient-to-t from-black/40 to-transparent" />
-              </div>
+        <>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedCourses.map((course) => (
+            <CourseCard
+              key={course.id}
+              course={course}
+              onEdit={onEdit}
+              onRequestDelete={onRequestDelete}
+            />
+          ))}
+          </div>
 
-              <div className="space-y-3 p-4">
-                <h3 className="text-lg font-semibold leading-snug text-white">{p.title}</h3>
-                <p className="line-clamp-2 text-sm text-gray-400">{p.description}</p>
+          {totalPages > 1 ? (
+            <div className="pt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPage((p) => Math.max(1, p - 1));
+                      }}
+                      className={page <= 1 ? "pointer-events-none opacity-50" : undefined}
+                    />
+                  </PaginationItem>
 
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs text-gray-400">
-                  <span>
-                    <span className="text-gray-500">Duration</span> · {p.duration}
-                  </span>
-                  <span>
-                    <span className="text-gray-500">Eligibility</span> ·{" "}
-                    {p.eligibility?.trim() ? p.eligibility : "—"}
-                  </span>
-                </div>
+                  {(() => {
+                    const window = 2;
+                    const start = Math.max(1, page - window);
+                    const end = Math.min(totalPages, page + window);
+                    const showLeftEllipsis = start > 1;
+                    const showRightEllipsis = end < totalPages;
 
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <button
-                    type="button"
-                    title="Click to toggle Active / Inactive"
-                    onClick={() => toggleStatus(p.id, p.status)}
-                    className={`inline-flex shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-200 ${
-                      p.status === "Active"
-                        ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
-                        : "border-red-500/40 bg-red-500/15 text-red-300 hover:bg-red-500/25"
-                    }`}
-                  >
-                    {p.status}
-                  </button>
+                    const pagesToShow: number[] = [];
+                    for (let p = start; p <= end; p++) pagesToShow.push(p);
 
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/courses/edit/${p.id}`)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2 py-1 text-xs font-medium text-blue-300 transition-all duration-200 hover:bg-white/20"
-                      aria-label={`Edit ${p.title}`}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteId(p.id)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2 py-1 text-xs font-medium text-red-300 transition-all duration-200 hover:bg-white/20"
-                      aria-label={`Delete ${p.title}`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                    return (
+                      <>
+                        {showLeftEllipsis ? (
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(1);
+                              }}
+                              isActive={page === 1}
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                        ) : null}
+                        {showLeftEllipsis ? <PaginationEllipsis /> : null}
+
+                        {pagesToShow.map((p) => (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(p);
+                              }}
+                              isActive={p === page}
+                            >
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+
+                        {showRightEllipsis ? <PaginationEllipsis /> : null}
+                        {showRightEllipsis ? (
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(totalPages);
+                              }}
+                              isActive={page === totalPages}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ) : null}
+                      </>
+                    );
+                  })()}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPage((p) => Math.min(totalPages, p + 1));
+                      }}
+                      className={page >= totalPages ? "pointer-events-none opacity-50" : undefined}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+
+              <div className="mt-3 text-center text-sm text-gray-400">
+                Showing{" "}
+                {Math.min((page - 1) * pageSize + 1, filtered.length)}-
+                {Math.min(page * pageSize, filtered.length)} of {filtered.length}
               </div>
             </div>
-          ))}
-        </div>
+          ) : null}
+        </>
       )}
 
-      <DeleteModal open={!!deleteId} onOpenChange={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete course" description="This course will be permanently removed." />
+      <DeleteModal
+        open={deleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null);
+        }}
+        onConfirm={handleDelete}
+        title="Delete course"
+        description="This course will be permanently removed."
+      />
     </div>
   );
 };

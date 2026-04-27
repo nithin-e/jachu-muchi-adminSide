@@ -1,22 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
-import { Eye, Search, Trash2, ChevronDown, Loader2 } from "lucide-react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Eye, Loader2, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
-import { ResponsiveTable } from "@/components/ui/ResponsiveTable";
+import DeleteModal from "@/components/shared/DeleteModal";
+import { ResponsiveTable, type ResponsiveTableColumn } from "@/components/ui/ResponsiveTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-type EnquiryStatus = "New" | "Contacted" | "Interested" | "Converted" | "Closed";
-
-interface Enquiry {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  course: string;
-  message: string;
-  date: string;
-  status: EnquiryStatus;
-}
+import {
+  deleteEnquiry,
+  getEnquiries,
+  type Enquiry,
+  type EnquiryStatus,
+  updateEnquiryStatus,
+} from "@/api/services/enquiry.service";
 
 const STATUS_OPTIONS: EnquiryStatus[] = [
   "New",
@@ -34,103 +29,171 @@ const statusClasses: Record<EnquiryStatus, string> = {
   Closed: "border border-red-400/20 bg-red-400/10 text-red-300",
 };
 
-const initialEnquiries: Enquiry[] = [
-  {
-    id: 1,
-    name: "Aarav Sharma",
-    phone: "+91 98123 45678",
-    email: "aarav.sharma@example.com",
-    course: "Premium Vision Plan",
-    message:
-      "I want details about premium lenses, delivery timelines, and available frame offers.",
-    date: "19 Mar 2026",
-    status: "New",
-  },
-  {
-    id: 2,
-    name: "Priya Nair",
-    phone: "+91 99221 88441",
-    email: "priya.nair@example.com",
-    course: "Contact Lens Subscription",
-    message:
-      "Please share monthly and quarterly subscription plans with pricing and trial options.",
-    date: "18 Mar 2026",
-    status: "Contacted",
-  },
-  {
-    id: 3,
-    name: "Rahul Verma",
-    phone: "+91 98700 10022",
-    email: "rahul.verma@example.com",
-    course: "Blue Light Protection Package",
-    message:
-      "Need recommendations for computer glasses and whether zero-power lenses are included.",
-    date: "17 Mar 2026",
-    status: "Interested",
-  },
-  {
-    id: 4,
-    name: "Neha Kapoor",
-    phone: "+91 99887 55443",
-    email: "neha.kapoor@example.com",
-    course: "Progressive Lens Upgrade",
-    message:
-      "Interested in progressive lenses, looking for a quick consultation and best options.",
-    date: "16 Mar 2026",
-    status: "Converted",
-  },
-  {
-    id: 5,
-    name: "Vikram Singh",
-    phone: "+91 98989 70707",
-    email: "vikram.singh@example.com",
-    course: "Eyeglass Repair Service",
-    message:
-      "Checking repair turnaround for broken frame hinge and lens alignment correction.",
-    date: "15 Mar 2026",
-    status: "Closed",
-  },
-];
-
 const EnquiriesPage = () => {
-
-  const [enquiries, setEnquiries] = useState<Enquiry[]>(initialEnquiries);
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"All" | EnquiryStatus>("All");
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const deferredSearch = useDeferredValue(search.trim().toLowerCase());
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
+    const fetchList = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getEnquiries();
+        setEnquiries(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    void fetchList();
   }, []);
 
   const filteredEnquiries = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = deferredSearch;
 
     return enquiries.filter((enquiry) => {
       const matchesSearch =
+        !query ||
         enquiry.name.toLowerCase().includes(query) ||
         enquiry.phone.toLowerCase().includes(query) ||
-        enquiry.course.toLowerCase().includes(query);
+        enquiry.email.toLowerCase().includes(query) ||
+        enquiry.course.toLowerCase().includes(query) ||
+        enquiry.message.toLowerCase().includes(query);
 
       const matchesStatus =
         statusFilter === "All" ? true : enquiry.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [enquiries, search, statusFilter]);
+  }, [enquiries, deferredSearch, statusFilter]);
 
-  const handleStatusChange = (id: number, nextStatus: EnquiryStatus) => {
+  const handleStatusChange = useCallback(async (enquiryId: string, nextStatus: EnquiryStatus) => {
     setEnquiries((prev) =>
       prev.map((enquiry) =>
-        enquiry.id === id ? { ...enquiry, status: nextStatus } : enquiry,
+        enquiry.id === enquiryId ? { ...enquiry, status: nextStatus } : enquiry,
       ),
     );
-  };
+    try {
+      await updateEnquiryStatus(enquiryId, nextStatus);
+    } catch (err) {
+      console.error(err);
+      try {
+        const data = await getEnquiries();
+        setEnquiries(data);
+      } catch (refetchErr) {
+        console.error(refetchErr);
+      }
+    }
+  }, []);
 
-  const handleDelete = (id: number) => {
-    setEnquiries((prev) => prev.filter((enquiry) => enquiry.id !== id));
-  };
+  const handleDeleteConfirm = useCallback(async () => {
+    if (deleteId === null) return;
+    const id = deleteId;
+    setDeleteId(null);
+    try {
+      await deleteEnquiry(id);
+      setEnquiries((prev) => prev.filter((enquiry) => enquiry.id !== id));
+    } catch (err) {
+      console.error(err);
+      try {
+        const data = await getEnquiries();
+        setEnquiries(data);
+      } catch (refetchErr) {
+        console.error(refetchErr);
+      }
+    }
+  }, [deleteId]);
+
+  const columns = useMemo((): ResponsiveTableColumn<Enquiry>[] => [
+    {
+      key: "name",
+      header: "Name",
+      cellClassName: "text-sm font-semibold text-gray-200",
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      cellClassName: "text-sm text-gray-400",
+    },
+    {
+      key: "type",
+      header: "Type",
+      render: (e) => (e.type === "course" ? "Course Enquiry" : "Normal Enquiry"),
+      renderMobile: (e) => (e.type === "course" ? "Course Enquiry" : "Normal Enquiry"),
+      cellClassName: "text-sm text-gray-400",
+    },
+    {
+      key: "date",
+      header: "Date",
+      cellClassName: "text-sm text-gray-400",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (enquiry) => (
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-inset ${statusClasses[enquiry.status]}`}
+          >
+            {enquiry.status}
+          </span>
+          <Select
+            value={enquiry.status}
+            onValueChange={(value) => void handleStatusChange(enquiry.id, value as EnquiryStatus)}
+          >
+            <SelectTrigger
+              aria-label={`Change status for ${enquiry.name}`}
+              className="h-8 w-[132px] rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white backdrop-blur-lg hover:bg-white/10"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border border-white/10 bg-slate-900 text-white">
+              {STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status} className="focus:bg-white/10 focus:text-white data-[state=checked]:bg-blue-500/20 data-[state=checked]:text-blue-200" value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ),
+      renderMobile: (enquiry) => (
+        <span
+          className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-inset ${statusClasses[enquiry.status]}`}
+        >
+          {enquiry.status}
+        </span>
+      ),
+    },
+  ], [handleStatusChange]);
+
+  const renderActions = useCallback(
+    (enquiry: Enquiry) => (
+      <>
+        <Link
+          to={`/enquiries/${enquiry.id}`}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:bg-blue-700"
+          aria-label={`View enquiry for ${enquiry.name}`}
+        >
+          <Eye className="h-4 w-4" />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setDeleteId(String(enquiry.id))}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-400/10 text-red-300 shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:bg-red-400/15"
+          aria-label={`Delete enquiry for ${enquiry.name}`}
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </>
+    ),
+    [],
+  );
 
   return (
     <div className="space-y-6">
@@ -144,10 +207,11 @@ const EnquiriesPage = () => {
           <div className="relative w-full sm:max-w-md">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
             <input
-              type="text"
+              type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by name, phone or course..."
+              placeholder="Search by name, phone, email, course or message..."
+              autoComplete="off"
               className="h-10 w-full rounded-lg border border-white/20 bg-white/10 pl-11 pr-4 text-sm text-gray-100 shadow-sm backdrop-blur-lg transition-all duration-200 placeholder:text-gray-400 hover:bg-white/15 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -175,16 +239,16 @@ const EnquiriesPage = () => {
           <div className="hidden md:block overflow-x-auto rounded-xl border border-white/20 bg-white/10 backdrop-blur-lg">
             <div className="px-5 py-14">
               <div className="flex items-center justify-center gap-2 text-sm text-gray-300">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading enquiries...
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                Loading enquiries…
               </div>
             </div>
           </div>
 
           <div className="md:hidden rounded-xl border border-white/20 bg-white/10 backdrop-blur-lg p-4 shadow-md">
             <div className="flex items-center justify-center gap-2 text-sm text-gray-300">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading enquiries...
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              Loading enquiries…
             </div>
           </div>
         </>
@@ -203,87 +267,20 @@ const EnquiriesPage = () => {
       ) : (
         <ResponsiveTable
           data={filteredEnquiries}
-          columns={[
-            {
-              key: "name",
-              header: "Name",
-              cellClassName: "text-sm font-semibold text-gray-200",
-            },
-            {
-              key: "phone",
-              header: "Phone",
-              cellClassName: "text-sm text-gray-400",
-            },
-            {
-              key: "course",
-              header: "Course",
-              cellClassName: "text-sm text-gray-400",
-            },
-            {
-              key: "date",
-              header: "Date",
-              cellClassName: "text-sm text-gray-400",
-            },
-            {
-              key: "status",
-              header: "Status",
-              render: (enquiry) => (
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-inset ${statusClasses[enquiry.status]}`}
-                  >
-                    {enquiry.status}
-                  </span>
-                  <Select
-                    value={enquiry.status}
-                    onValueChange={(value) => handleStatusChange(enquiry.id, value as EnquiryStatus)}
-                  >
-                    <SelectTrigger
-                      aria-label={`Change status for ${enquiry.name}`}
-                      className="h-8 w-[132px] rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white backdrop-blur-lg hover:bg-white/10"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="border border-white/10 bg-slate-900 text-white">
-                      {STATUS_OPTIONS.map((status) => (
-                        <SelectItem key={status} className="focus:bg-white/10 focus:text-white data-[state=checked]:bg-blue-500/20 data-[state=checked]:text-blue-200" value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ),
-              renderMobile: (enquiry) => (
-                <span
-                  className={`inline-flex rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-inset ${statusClasses[enquiry.status]}`}
-                >
-                  {enquiry.status}
-                </span>
-              ),
-            },
-          ]}
-          renderActions={(enquiry) => (
-            <>
-              <Link
-                to={`/enquiries/${enquiry.id}`}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:bg-blue-700"
-                aria-label={`View enquiry for ${enquiry.name}`}
-              >
-                <Eye className="h-4 w-4" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => handleDelete(enquiry.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-400/10 text-red-300 shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:bg-red-400/15"
-                aria-label={`Delete enquiry for ${enquiry.name}`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </>
-          )}
+          columns={columns}
+          renderActions={renderActions}
         />
       )}
+
+      <DeleteModal
+        open={deleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete enquiry"
+        description="This enquiry will be permanently removed."
+      />
     </div>
   );
 };

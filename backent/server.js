@@ -41,6 +41,11 @@ app.get("/", (req, res) => {
   res.json({ message: "Backend running 🚀" });
 });
 
+// ✅ Health check api
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // ✅ Global error middleware
 app.use(errorMiddleware);
 

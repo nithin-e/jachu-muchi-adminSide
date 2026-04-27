@@ -24,3 +24,4 @@ export function loadUserRoutes(app: Application): void {
   app.use("/api/admin/branches", BranchRouter);
   
 }
+

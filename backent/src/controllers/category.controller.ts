@@ -26,11 +26,15 @@ export class CategoryController {
     return getAllCategories(req, res, next);
   }
 
+  
+  
+
   /**
    * Initial-load endpoint: returns all categories with details, no pagination.
    */
   async listAll(_req: Request, res: Response, next: NextFunction){
     try {
+      console.log("iam from cateee ")
       const data = await CategoryModel.find()
         .select("-nameKey")
         .sort({ createdAt: -1 });
@@ -129,6 +133,7 @@ export class CategoryController {
   }
   async create(req: Request, res: Response, next: NextFunction){
     try {
+      console.log('iam here brooo')
       const body = req.body as Record<string, unknown>;
       const name = mapBodyToName(body);
       const productCount = typeof body.productCount === "number" ? body.productCount : undefined;

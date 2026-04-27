@@ -4,7 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
+const dns_1 = __importDefault(require("dns"));
 const http_1 = __importDefault(require("http"));
+const path_1 = __importDefault(require("path"));
 const app_1 = __importDefault(require("./app"));
 const mongo_config_1 = require("./config/mongo.config");
 const envPath = path_1.default.resolve(process.cwd(), ".env");
@@ -48,8 +50,5 @@ const startServer = async () => {
         console.error(error);
         process.exit(1);
     }
-    const server = new app_1.default().getServer();
-    server.listen(PORT);
-    console.log(`Server running on port ${PORT}`);
 };
 void startServer();
