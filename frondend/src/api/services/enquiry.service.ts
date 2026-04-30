@@ -6,8 +6,8 @@ import { api } from "../client";
  * 2) Set `ENQUIRIES_LIST_PATH` and `enquiryDetailPath` below to your routes (e.g. `/enquiries`, `/enquiries/:id`).
  * If GET list/detail already returns `Enquiry`-shaped JSON, mapping is skipped automatically.
  */
-export const ENQUIRIES_LIST_PATH = "/api/enquiries/";
-export const enquiryDetailPath = (id: string) => `/api/enquiries/${id}`;
+export const ENQUIRIES_LIST_PATH = "/api/admin/enquiries";
+export const enquiryDetailPath = (id: string) => `/api/admin/enquiries/${id}`;
 
 export type EnquiryStatus = "New" | "Contacted" | "Interested" | "Converted" | "Closed";
 

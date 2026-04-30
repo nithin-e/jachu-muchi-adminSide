@@ -18,10 +18,10 @@ export function loadUserRoutes(app: Application): void {
   app.use("/api/enquiries", enquiryRoutes);
   app.use("/api/gallery", galleryRouter);
   app.use("/api/testimonials", testimonialRouter);
-  app.use("/api/banners", bannerRouter);
+  app.use("/api/admin/banners", bannerRouter);
   app.use("/api/articles", articleRouter);
   app.use("/api/categories", categoryRouter);
-  app.use("/api/admin/branches", BranchRouter);
+  app.use("/api/branches", BranchRouter);
   
 }
 
