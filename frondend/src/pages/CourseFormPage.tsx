@@ -22,7 +22,7 @@ const emptyForm = {
   type: "",
   duration: "",
   eligibility: "",
-  keyDetails: "",
+  courseOverview: "",
 };
 
 const courseTypeOptions = [
@@ -61,7 +61,7 @@ const CourseFormPage = () => {
         type: stateCourse.type,
         duration: stateCourse.duration,
         eligibility: stateCourse.eligibility,
-        keyDetails: stateCourse.keyDetails,
+        courseOverview: stateCourse.courseOverview,
       });
       setPreviewUrl(stateCourse.image || "");
       setImageFile(null);
@@ -84,7 +84,7 @@ const CourseFormPage = () => {
           type: data.type,
           duration: data.duration,
           eligibility: data.eligibility,
-          keyDetails: data.keyDetails,
+          courseOverview: data.courseOverview,
         });
         setPreviewUrl(data.imageUrl ?? "");
         setImageFile(null);
@@ -144,7 +144,7 @@ const CourseFormPage = () => {
 
       const payload: CoursePayload = {
         courseName: form.courseName,
-        keyDetails: form.keyDetails,
+        courseOverview: form.courseOverview,
         duration: form.duration,
         eligibility: form.eligibility,
         type: form.type,
@@ -166,7 +166,7 @@ const CourseFormPage = () => {
         setSubmitting(false);
       }
     },
-    [form.courseName, form.duration, form.eligibility, form.keyDetails, form.type, id, imageFile, isEdit, navigate, previewUrl],
+    [form.courseName, form.duration, form.eligibility, form.courseOverview, form.type, id, imageFile, isEdit, navigate, previewUrl],
   );
 
   const durationLabel = useMemo(
@@ -237,11 +237,11 @@ const CourseFormPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-200">Key Details</Label>
+              <Label className="text-sm font-medium text-gray-200">Course Overview</Label>
               <Textarea
-                value={form.keyDetails}
-                onChange={(e) => setForm((prev) => ({ ...prev, keyDetails: e.target.value }))}
-                placeholder="Write key details"
+                value={form.courseOverview}
+                onChange={(e) => setForm((prev) => ({ ...prev, courseOverview: e.target.value }))}
+                placeholder="Write course overview"
                 rows={5}
                 className="min-h-[120px]"
               />
@@ -340,7 +340,7 @@ const CourseFormPage = () => {
                   {form.courseName || "Course name"}
                 </p>
                 <p className="line-clamp-2 text-sm leading-relaxed text-gray-400">
-                  {form.keyDetails || "Key details will appear here as you type."}
+                  {form.courseOverview || "Course overview will appear here as you type."}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/15 px-2.5 py-1 text-xs font-medium text-blue-200">

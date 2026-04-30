@@ -1,7 +1,7 @@
 import { api } from "../client";
 
-export const COURSES_LIST_PATH = "/api/courses/all";
-const COURSES_BASE_PATH = "/api/courses";
+export const COURSES_LIST_PATH = "/api/admin/courses/all";
+const COURSES_BASE_PATH = "/api/admin/courses";
 const courseDetailPath = (id: string) => `${COURSES_BASE_PATH}/${id}`;
 
 export type CourseListItem = {
@@ -10,22 +10,20 @@ export type CourseListItem = {
   type: string;
   duration: string;
   eligibility: string;
-  keyDetails: string;
+  courseOverview: string;
   status: "Active" | "Inactive";
   image: string;
 };
 
 export type CoursePayload = {
-  // New backend shape
   courseName?: string;
-  keyDetails?: string;
+  courseOverview?: string;
   duration?: string;
   eligibility?: string;
   type?: string;
   imageUrl?: string;
   imageFile?: File | null;
   status?: "Active" | "Inactive";
-  // Backward-compat keys used by existing UI calls
   title?: string;
   body?: string;
   image?: string;
@@ -72,7 +70,7 @@ const mapListRowToUi = (item: CourseListApiRow): CourseListItem => ({
   type: item.type || item.category || "General",
   duration: item.duration ?? "",
   eligibility: item.eligibility ?? "",
-  keyDetails: (item.keyDetails || item.description) ?? "",
+  courseOverview: (item.courseOverview || item.keyDetails || item.description) ?? "",
   status:
     item.status === "Active" || item.status === true
       ? "Active"
@@ -93,7 +91,7 @@ export const mapCoursesResponse = (data: unknown): CourseListItem[] => {
     console.warn("[course.service] Response data is not an array:", actual);
     return [];
   }
-  
+
   console.log("[course.service] Raw courses:", actual);
 
   return actual
@@ -111,7 +109,7 @@ export type CourseFormState = {
   type: string;
   duration: string;
   eligibility: string;
-  keyDetails: string;
+  courseOverview: string;
   imageUrl?: string;
 };
 
@@ -122,7 +120,7 @@ export const mapCourseDetailToForm = (raw: Record<string, unknown>): CourseFormS
     type: String(detail.type ?? ""),
     duration: String(detail.duration ?? ""),
     eligibility: String(detail.eligibility ?? ""),
-    keyDetails: String(detail.keyDetails ?? ""),
+    courseOverview: String(detail.CourseOverview ?? detail.courseOverview ?? detail.keyDetails ?? ""),
     imageUrl: typeof detail.imageUrl === "string" ? detail.imageUrl : undefined,
   };
 };
@@ -137,19 +135,19 @@ export const getCourse = async (id: string, signal?: AbortSignal): Promise<Cours
     type: "",
     duration: "",
     eligibility: "",
-    keyDetails: "",
+    courseOverview: "",
   };
 };
 
 const toFormData = (data: CoursePayload): FormData => {
   const formData = new FormData();
   const courseName = data.courseName ?? data.title ?? "";
-  const keyDetails = data.keyDetails ?? data.body ?? "";
+  const courseOverview = data.courseOverview ?? data.body ?? "";
 
   formData.append("name", courseName);
   formData.append("type", data.type ?? "");
   formData.append("duration", data.duration ?? "");
-  formData.append("keyDetails", keyDetails);
+  formData.append("CourseOverview", courseOverview);
   formData.append("eligibility", data.eligibility ?? "");
   formData.append("status", data.status ?? "Active");
 
