@@ -1,4 +1,6 @@
 import { NextFunction, Request, Response } from "express";
+import fs from "fs";
+import path from "path";
 import mongoose from "mongoose";
 import { GalleryModel, IGalleryDocument } from "../models/Gallery";
 import { getAllHandler } from "./getAllHandler";
@@ -159,11 +161,7 @@ export const createGallery = async (
 ) => {
   try {
     const { title, category } = req.body;
-    // const file = req.file;
-    const file = req.body.galleryImage;
-
-    console.log('..check this file...broooooo', file)
-    console.log('req body',req.body)
+    const imageInput: string = req.body.image;
 
     if (!title) {
         return res.status(StatusCode.BAD_REQUEST).json({
@@ -179,15 +177,36 @@ export const createGallery = async (
         });
     }
 
-    if (!file) {
-      console.log('..check this file...', file)
+    if (!imageInput) {
         return res.status(StatusCode.BAD_REQUEST).json({
             success: false,
             message: MESSAGES.GALLERY.IMAGE_REQUIRED,
         });
     }
 
-    const imageUrl = `${galleryUploadPublicPath}/${file.filename}`;
+    let imageUrl: string;
+
+    if (req.file) {
+        imageUrl = `${galleryUploadPublicPath}/${req.file.filename}`;
+    } else if (imageInput.startsWith("data:image")) {
+        const match = imageInput.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (!match) {
+            return res.status(StatusCode.BAD_REQUEST).json({
+                success: false,
+                message: "Invalid image format",
+            });
+        }
+        const ext = match[1];
+        const base64Data = match[2];
+        const filename = `gallery-${Date.now()}.${ext}`;
+        const uploadDir = path.join(process.cwd(), "uploads", "gallery");
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+        const filePath = path.join(uploadDir, filename);
+        fs.writeFileSync(filePath, Buffer.from(base64Data, "base64"));
+        imageUrl = `${galleryUploadPublicPath}/${filename}`;
+    } else {
+        imageUrl = imageInput;
+    }
 
     const newItem = new GalleryModel({
         title,
@@ -224,10 +243,7 @@ export const updateGallery = async (
         });
     }
 
-    const { title, category } = req.body;
-    const file = req.file;
-
-    console.log('..check this file...', file)
+    const { title, category, image: imageInput } = req.body;
 
     const existing = await GalleryModel.findById(id);
     if (!existing) {
@@ -239,8 +255,23 @@ export const updateGallery = async (
 
     if (title !== undefined) existing.title = title;
     if (category !== undefined) existing.category = category;
-    if (file) {
-        existing.imageUrl = `${galleryUploadPublicPath}/${file.filename}`;
+
+    if (req.file) {
+        existing.imageUrl = `${galleryUploadPublicPath}/${req.file.filename}`;
+    } else if (imageInput && imageInput.startsWith("data:image")) {
+        const match = imageInput.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (match) {
+            const ext = match[1];
+            const base64Data = match[2];
+            const filename = `gallery-${Date.now()}.${ext}`;
+            const uploadDir = path.join(process.cwd(), "uploads", "gallery");
+            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+            const filePath = path.join(uploadDir, filename);
+            fs.writeFileSync(filePath, Buffer.from(base64Data, "base64"));
+            existing.imageUrl = `${galleryUploadPublicPath}/${filename}`;
+        }
+    } else if (imageInput) {
+        existing.imageUrl = imageInput;
     }
 
     const data = await existing.save();

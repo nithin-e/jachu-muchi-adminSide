@@ -6,9 +6,9 @@ export interface CreateBannerInput {
   imageUrl: string;
 }
 
-/** Omitted `imageUrl` on update keeps the existing image. */
+/** Omitted fields on update keep existing values. */
 export interface UpdateBannerInput {
-  title: string;
-  status: BannerStatus;
+  title?: string;
+  status?: BannerStatus;
   imageUrl?: string;
 }

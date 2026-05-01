@@ -15,6 +15,7 @@ const emptyForm: Omit<Alumni, "id" | "image"> = {
   name: "",
   company: "",
   role: "",
+  place: "",
 };
 
 const fileToDataUrl = (file: File): Promise<string> =>
@@ -43,7 +44,7 @@ const AlumniFormPage = () => {
 
   useEffect(() => {
     if (canPrefillFromState && stateAlumni) {
-      setForm({ name: stateAlumni.name, company: stateAlumni.company, role: stateAlumni.role });
+      setForm({ name: stateAlumni.name, company: stateAlumni.company, role: stateAlumni.role, place: stateAlumni.place ?? "" });
       setPreviewUrl(stateAlumni.image ?? "");
       setImageFile(null);
       setEditLoading(false);
@@ -61,7 +62,7 @@ const AlumniFormPage = () => {
           navigate("/alumni");
           return;
         }
-        setForm({ name: existing.name, company: existing.company, role: existing.role });
+        setForm({ name: existing.name, company: existing.company, role: existing.role, place: existing.place ?? "" });
         setPreviewUrl(existing.image ?? "");
       } catch (e) {
         console.error(e);
@@ -100,6 +101,7 @@ const AlumniFormPage = () => {
           name: form.name.trim(),
           role: form.role.trim(),
           company: form.company.trim(),
+          place: form.place.trim(),
           image,
         });
       } else {
@@ -107,6 +109,7 @@ const AlumniFormPage = () => {
           name: form.name.trim(),
           role: form.role.trim(),
           company: form.company.trim(),
+          place: form.place.trim(),
           image,
         });
       }
@@ -181,6 +184,10 @@ const AlumniFormPage = () => {
         <div className="space-y-1.5">
           <Label className="text-white/80">Company</Label>
           <Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-white/80">Place / City</Label>
+          <Input value={form.place} onChange={(e) => setForm({ ...form, place: e.target.value })} />
         </div>
 
         <div className="flex gap-2">

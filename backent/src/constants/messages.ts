@@ -16,6 +16,8 @@ export const MESSAGES = {
     USER_NOT_FOUND: "User not found",
     INVALID_PASSWORD: "Invalid password",
     ACCOUNT_INACTIVE: "Account is inactive",
+    UNAUTHORIZED: "Unauthorized access",
+    FORBIDDEN: "You don't have permission to access this resource",
   },
 
   ERROR: {

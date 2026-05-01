@@ -2,12 +2,14 @@ import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import path from "path";
+
 import authRoutes from "./routes/admin/auth.routes";
 import { corsOptions } from "./config/cors.config";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { logRequest } from "./middlewares/logger.middleware";
 import { rateLimit } from "./middlewares/rate-limit.middleware";
 import { MESSAGES } from "./constants/messages";
+
 import { loadAdminRoutes } from "./loaders/adminRoutes.loader";
 import { loadUserRoutes } from "./loaders/userRoutes.loader";
 
@@ -16,6 +18,9 @@ class AppServer {
 
   constructor() {
     this.app = express();
+
+    console.log("🚀 AppServer INIT"); // ✅ DEBUG
+
     this.loadMiddlewares();
     this.loadRoutes();
     this.loadErrorHandling();
@@ -26,27 +31,43 @@ class AppServer {
     this.app.use(rateLimit);
     this.app.use(express.json({ limit: "10mb" }));
     this.app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
     this.app.use(logRequest);
-    this.app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+    this.app.use(
+      "/uploads",
+      express.static(path.join(process.cwd(), "uploads"))
+    );
+
     this.app.use(cors(corsOptions));
     this.app.options(/.*/, cors(corsOptions));
   }
 
   private loadRoutes(): void {
+    console.log("🔥 LOAD ROUTES STARTED"); // ✅ DEBUG
+
     // Shared (no auth required)
     this.app.use("/api/admin/auth", authRoutes);
     this.app.use("/api/auth", authRoutes);
 
-    // Segregated by concern
-    loadAdminRoutes(this.app);  
-    loadUserRoutes(this.app);    
+    // Admin + User routes
+    loadAdminRoutes(this.app);
+    loadUserRoutes(this.app);
+
+    // Test route (IMPORTANT DEBUG)
+    this.app.get("/test-route", (_req, res) => {
+      res.send("OK - SERVER WORKING");
+    });
 
     this.app.get("/", (_req, res) => {
       res.json({ message: MESSAGES.APP.BACKEND_RUNNING });
     });
 
     this.app.get("/api/health", (_req, res) => {
-      res.json({ status: "ok", timestamp: new Date().toISOString() });
+      res.json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+      });
     });
   }
 

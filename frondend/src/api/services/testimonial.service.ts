@@ -1,8 +1,8 @@
 import { api, isApiRequestError } from "../client";
 import type { Testimonial } from "@/lib/testimonial-store";
 
-export const TESTIMONIALS_LIST_PATH = "/api/testimonials/all";
-const TESTIMONIALS_BASE_PATH = "/api/testimonials";
+export const TESTIMONIALS_LIST_PATH = "/api/admin/testimonials/all";
+const TESTIMONIALS_BASE_PATH = "/api/admin/testimonials";
 export const testimonialDetailPath = (id: string) => `${TESTIMONIALS_BASE_PATH}/${id}`;
 
 type TestimonialApiRow = {

@@ -5,8 +5,8 @@ import { api } from "../client";
  * JSONPlaceholder does not have `/settings`, so we use a stable existing resource.
  * Swap paths when your real backend is ready.
  */
-export const SETTINGS_GET_PATH = "/api/settings/";
-export const SETTINGS_SAVE_PATH = "/api/settings/";
+export const SETTINGS_GET_PATH = "/api/admin/settings/";
+export const SETTINGS_SAVE_PATH = "/api/admin/settings/";
 
 export interface AdminSettings {
   whatsAppNumber: string;

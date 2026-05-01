@@ -5,7 +5,7 @@ export interface CreateAdminUserInput {
   email: string;
   role: AdminUserRole;
   status: AdminUserStatus;
-  password: string;
+  password?: string;
 }
 
 export interface UpdateAdminUserInput {

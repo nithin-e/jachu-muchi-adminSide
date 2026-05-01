@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
-import { BANNER_STATUS_VALUES, IBannerDocument } from "../../models/Banner";
+import { BANNER_STATUS_VALUES, BannerStatus, IBannerDocument } from "../../models/Banner";
 import { IBannerRepository } from "../../repositories/interfaces/IBannerRepository";
 import { CreateBannerInput, UpdateBannerInput } from "../../types/banner.types";
 import { throwBadRequest, throwNotFound } from "../../utils/http-errors.helper";
@@ -86,6 +86,25 @@ export class BannerService implements IBannerService {
     return doc;
   }
 
+  async toggleStatus(bannerId: string): Promise<IBannerDocument> {
+    if (!mongoose.Types.ObjectId.isValid(bannerId)) {
+      throwBadRequest(MESSAGES.BANNER.INVALID_ID);
+    }
+
+    const existing = await this.bannerRepository.findById(bannerId);
+    if (!existing) {
+      throwNotFound(MESSAGES.BANNER.NOT_FOUND);
+    }
+
+    const nextStatus: BannerStatus = existing.status === "Active" ? "Inactive" : "Active";
+    const updated = await this.bannerRepository.updateById(bannerId, { status: nextStatus });
+    if (!updated) {
+      throwNotFound(MESSAGES.BANNER.NOT_FOUND);
+    }
+
+    return updated;
+  }
+
   private normalizeAndValidateCreate(
     input: CreateBannerInput
   ): CreateBannerInput {
@@ -108,15 +127,18 @@ export class BannerService implements IBannerService {
     input: UpdateBannerInput,
     existingImageUrl: string
   ): UpdateBannerInput {
-    const title = input.title?.trim() ?? "";
+    const title = input.title?.trim();
     const status = input.status;
 
-    if (!title) throwBadRequest(MESSAGES.BANNER.TITLE_REQUIRED);
-    if (!BANNER_STATUS_VALUES.includes(status)) {
+    if (title !== undefined && !title) throwBadRequest(MESSAGES.BANNER.TITLE_REQUIRED);
+    if (status !== undefined && !BANNER_STATUS_VALUES.includes(status)) {
       throwBadRequest(MESSAGES.BANNER.STATUS_MUST_BE_ACTIVE_OR_INACTIVE);
     }
 
-    const out: UpdateBannerInput = { title, status };
+    const out: UpdateBannerInput = {};
+
+    if (title !== undefined) out.title = title;
+    if (status !== undefined) out.status = status;
 
     if (input.imageUrl !== undefined) {
       const next = input.imageUrl?.trim() || undefined;

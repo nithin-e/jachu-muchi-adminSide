@@ -3,6 +3,11 @@ import { IMailDispatchService } from "../interfaces/IMailDispatchService";
 import { EnquiryPayload, MailDispatchResult } from "../../types/Outreachtypes";
 import { INotificationRepository } from "../../repositories/interfaces/INotificationRepository";
 
+
+// src/types/enquiry.ts
+
+
+
 export class MailDispatchService implements IMailDispatchService {
   constructor(
     private readonly notificationRepository: INotificationRepository,

@@ -3,6 +3,7 @@ export interface Alumni {
   name: string;
   role: string;
   company: string;
+  place: string;
   /** Data URL or empty — no image shown as placeholder in UI */
   image: string;
 }
@@ -15,6 +16,7 @@ const seedAlumni: Alumni[] = [
     name: "Aditi Rao",
     company: "Infosys",
     role: "Software Engineer",
+    place: "Bangalore",
     image: "",
   },
   {
@@ -22,6 +24,7 @@ const seedAlumni: Alumni[] = [
     name: "Vivek Mehta",
     company: "TCS",
     role: "Data Analyst",
+    place: "Mumbai",
     image: "",
   },
 ];
@@ -36,6 +39,7 @@ const normalizeAlumni = (raw: unknown): Alumni | null => {
     name: typeof a.name === "string" ? a.name : "",
     role: typeof a.role === "string" ? a.role : "",
     company: typeof a.company === "string" ? a.company : "",
+    place: typeof a.place === "string" ? a.place : "",
     image: typeof a.image === "string" ? a.image : "",
   };
 };
@@ -93,6 +97,7 @@ export const upsertAlumni = (payload: Omit<Alumni, "id"> & { id?: string }): Alu
     name: payload.name,
     role: payload.role,
     company: payload.company,
+    place: payload.place,
     image: payload.image ?? "",
   };
   writeAlumni([created, ...items]);

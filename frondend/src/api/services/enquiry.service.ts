@@ -202,8 +202,8 @@ export const getEnquiryById = async (
     const response = res.data;
     const row = (response as any)?.data ?? response;
     if (!row || typeof row !== "object") return null;
-    if (isEnquiryRow(row)) return row as Enquiry;
     if (isEnquiryApiRow(row)) return mapApiRowToEnquiry(row);
+    if (isEnquiryRow(row)) return { ...row, id: String((row as any)._id ?? row.id ?? "") } as Enquiry;
     console.warn("[enquiry.service] Unrecognized enquiry detail shape.", row);
     return null;
   } catch {
@@ -216,9 +216,9 @@ export const deleteEnquiry = async (id: string): Promise<void> => {
 };
 
 export const updateEnquiryStatus = async (id: string, status: EnquiryStatus): Promise<void> => {
-  await api.patch(enquiryDetailPath(id), { status });
+  await api.patch(`${enquiryDetailPath(id)}/status`, { status });
 };
 
 export const updateEnquiryNotes = async (id: string, notes: string): Promise<void> => {
-  await api.patch(enquiryDetailPath(id), { notes });
+  await api.patch(`${enquiryDetailPath(id)}/notes`, { notes });
 };

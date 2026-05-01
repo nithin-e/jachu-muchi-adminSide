@@ -9,9 +9,9 @@ export interface GalleryItem {
   image: string;
 }
 
-const PHOTOS_PATH = "/api/photos";
-const GALLERY_PATH = "/api/gallery";
-const JP_FALLBACK_PATH = "/api/photos";
+const PHOTOS_PATH = "/api/admin/photos";
+const GALLERY_PATH = "/api/admin/gallery";
+const JP_FALLBACK_PATH = "/api/admin/photos";
 export const galleryItemPath = (id: string) => `${GALLERY_PATH}/${id}`;
 
 type JsonPlaceholderPhoto = {
@@ -58,10 +58,10 @@ const mapPhotoToItem = (p: JsonPlaceholderPhoto): GalleryItem => ({
 const rowToGalleryItem = (raw: Record<string, unknown>): GalleryItem => {
   const category = isGalleryCategory(raw.category) ? raw.category : "Campus";
   return {
-    id: String(raw.id ?? ""),
+    id: String(raw.id ?? raw._id ?? ""),
     title: String(raw.title ?? ""),
     category,
-    image: String(raw.image ?? raw.url ?? ""),
+    image: String(raw.image ?? raw.imageUrl ?? raw.url ?? ""),
   };
 };
 
@@ -115,7 +115,7 @@ const normalizeGalleryItems = (data: unknown): GalleryItem[] => {
 
 export const getGalleryItems = async (): Promise<GalleryItem[]> => {
   const tryGet = async (path: string) =>
-    api.get<unknown>(`${path}?_limit=30`);
+    api.get<unknown>(`${path}/all?_limit=30`); // ✅ also fix endpoint
 
   let res;
   try {
@@ -125,7 +125,10 @@ export const getGalleryItems = async (): Promise<GalleryItem[]> => {
     res = await tryGet(JP_FALLBACK_PATH);
   }
 
-  return normalizeGalleryItems(res.data);
+  // ✅ FIX HERE
+  const actualData = (res.data as any)?.data ?? res.data;
+
+  return normalizeGalleryItems(actualData);
 };
 
 export const createGalleryItem = async (

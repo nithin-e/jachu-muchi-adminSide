@@ -1,8 +1,8 @@
 import { api } from "../client";
 import type { Category } from "@/types";
 
-export const CATEGORIES_LIST_PATH = "/api/categories/all";
-const CATEGORIES_BASE_PATH = "/api/categories";
+export const CATEGORIES_LIST_PATH = "/api/admin/categories/all";
+const CATEGORIES_BASE_PATH = "/api/admin/categories";
 export const categoryDetailPath = (id: string) => `${CATEGORIES_BASE_PATH}/${id}`;
 
 type CategoryApiRow = {

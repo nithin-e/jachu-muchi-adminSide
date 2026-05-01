@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import fs from "fs";
 import path from "path";
 import { bannerUploadPublicPath } from "../config/multer.banner";
 import {
@@ -62,9 +63,24 @@ export class BannerController {
     try {
       const file = req.file;
       let imageUrl: string | undefined;
+      const imageInput: string = req.body.image;
 
       if (file?.filename) {
         imageUrl = `${bannerUploadPublicPath}/${path.basename(file.filename)}`;
+      } else if (imageInput && imageInput.startsWith("data:image")) {
+        const match = imageInput.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (match) {
+          const ext = match[1];
+          const base64Data = match[2];
+          const filename = `banner-${Date.now()}.${ext}`;
+          const uploadDir = path.join(process.cwd(), "uploads", "banners");
+          if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+          const filePath = path.join(uploadDir, filename);
+          fs.writeFileSync(filePath, Buffer.from(base64Data, "base64"));
+          imageUrl = `${bannerUploadPublicPath}/${filename}`;
+        }
+      } else if (imageInput) {
+        imageUrl = imageInput;
       }
 
       const payload = mapBodyToCreateBannerInput(
@@ -95,9 +111,24 @@ export class BannerController {
 
       const file = req.file;
       let imageUrl: string | undefined;
+      const imageInput: string = req.body.image;
 
       if (file?.filename) {
         imageUrl = `${bannerUploadPublicPath}/${path.basename(file.filename)}`;
+      } else if (imageInput && imageInput.startsWith("data:image")) {
+        const match = imageInput.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (match) {
+          const ext = match[1];
+          const base64Data = match[2];
+          const filename = `banner-${Date.now()}.${ext}`;
+          const uploadDir = path.join(process.cwd(), "uploads", "banners");
+          if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+          const filePath = path.join(uploadDir, filename);
+          fs.writeFileSync(filePath, Buffer.from(base64Data, "base64"));
+          imageUrl = `${bannerUploadPublicPath}/${filename}`;
+        }
+      } else if (imageInput) {
+        imageUrl = imageInput;
       }
 
       const payload = mapBodyToUpdateBannerInput(
@@ -131,6 +162,27 @@ export class BannerController {
       return res.status(StatusCode.OK).json({
         success: true,
         message: MESSAGES.BANNER.DELETED_SUCCESS,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+  async toggleStatus(req: Request, res: Response, next: NextFunction){
+    try {
+      const { id } = req.params;
+      if (typeof id !== "string" || !id.trim()) {
+        return res.status(StatusCode.BAD_REQUEST).json({
+          success: false,
+          message: MESSAGES.BANNER.ID_REQUIRED,
+        });
+      }
+
+      const data = await this.bannerService.toggleStatus(id);
+
+      return res.status(StatusCode.OK).json({
+        success: true,
+        message: MESSAGES.BANNER.UPDATED_SUCCESS,
+        data,
       });
     } catch (error) {
       return next(error);

@@ -8,6 +8,7 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction){
     try {
 
+     console.log('req.body ......check edaa',req.body);
      
       
       const { email, password } = req.body;
