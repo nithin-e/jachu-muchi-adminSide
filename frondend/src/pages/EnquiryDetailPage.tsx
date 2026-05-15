@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -31,7 +31,8 @@ const SAVED_TOAST_MS = 1500;
 
 const EnquiryDetailPage = () => {
   const { id } = useParams();
-  const enquiryId = Number(id);
+  const navigate = useNavigate();
+  const enquiryId = id;
 
   const [enquiry, setEnquiry] = useState<Enquiry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +48,7 @@ const EnquiryDetailPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!Number.isFinite(enquiryId) || enquiryId < 1) {
+    if (!enquiryId || enquiryId.trim().length === 0) {
       setEnquiry(null);
       setLoading(false);
       return;
@@ -115,12 +116,13 @@ const EnquiryDetailPage = () => {
       setSaved(true);
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
       savedTimerRef.current = setTimeout(() => setSaved(false), SAVED_TOAST_MS);
+      setTimeout(() => navigate("/enquiries"), SAVED_TOAST_MS);
     } catch (err) {
       console.error(err);
     } finally {
       setSaving(false);
     }
-  }, [enquiry, notes]);
+  }, [enquiry, notes, navigate]);
 
   if (loading) {
     return (

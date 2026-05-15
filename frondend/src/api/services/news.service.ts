@@ -2,7 +2,7 @@ import { api } from "../client";
 import type { NewsItem } from "@/types";
 
 export const NEWS_LIST_PATH = "/api/articles/all";
-export const newsDetailPath = (id: string) => `/api/articles/${id}`;
+export const newsDetailPath = (id: string) => `/api/admin/articles/${id}`;
 
 type ArticleApiRow = {
   _id?: string;
@@ -27,6 +27,7 @@ const mapArticleToNewsItem = (row: ArticleApiRow): NewsItem => ({
   id: String(row._id ?? row.id ?? ""),
   title: row.title,
   description: row.description,
+  details: row.details ?? undefined,
   image: row.imageUrl ?? "",
   date: row.articleDate
     ? new Date(row.articleDate).toISOString().split("T")[0]
@@ -40,6 +41,7 @@ export const rowToNewsItem = (raw: Record<string, unknown>): NewsItem => ({
   id: String(raw.id ?? raw._id ?? ""),
   title: String(raw.title ?? ""),
   description: String(raw.description ?? raw.body ?? raw.content ?? ""),
+  details: typeof raw.details === "string" ? raw.details : undefined,
   image: typeof raw.imageUrl === "string"
     ? raw.imageUrl
     : typeof raw.image === "string"
@@ -97,7 +99,7 @@ export const getNewsById = async (id: string): Promise<NewsItem | null> => {
 };
 
 export const createNews = async (payload: Omit<NewsItem, "id">): Promise<NewsItem> => {
-  const res = await api.post<Record<string, unknown>>("/api/articles", {
+  const res = await api.post<Record<string, unknown>>("/api/admin/articles", {
     title: payload.title,
     description: payload.description,
     category: "News",
@@ -113,6 +115,7 @@ export const createNews = async (payload: Omit<NewsItem, "id">): Promise<NewsIte
     id: String(newId),
     title: String(data?.title ?? payload.title),
     description: String(data?.description ?? payload.description),
+    details: typeof data?.details === "string" ? data.details : undefined,
     image: data?.imageUrl ?? payload.image,
     date: String(data?.articleDate ?? payload.date),
     status: data?.status === "Published" || data?.status === "Draft" ? data.status : payload.status,
@@ -135,6 +138,7 @@ export const updateNews = async (id: string, payload: Omit<NewsItem, "id">): Pro
     id: String(data?._id ?? id),
     title: String(data?.title ?? payload.title),
     description: String(data?.description ?? payload.description),
+    details: typeof data?.details === "string" ? data.details : undefined,
     image: data?.imageUrl ?? payload.image,
     date: String(data?.articleDate ?? payload.date),
     status: data?.status === "Published" || data?.status === "Draft" ? data.status : payload.status,

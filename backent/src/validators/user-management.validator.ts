@@ -19,9 +19,7 @@ export const validateCreateUser = [
     .isEmail()
     .withMessage(MESSAGES.USER.VALID_EMAIL_REQUIRED),
   body("password")
-    .notEmpty()
-    .withMessage(MESSAGES.USER.PASSWORD_REQUIRED_MIN6)
-    .bail()
+    .optional()
     .isLength({ min: 6 })
     .withMessage(MESSAGES.USER.PASSWORD_REQUIRED_MIN6_ALT),
   body("role")

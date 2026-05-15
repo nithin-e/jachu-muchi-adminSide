@@ -61,9 +61,11 @@ const UsersPage = () => {
     const load = async () => {
       setIsLoading(true);
       try {
-        setUsers(await getManagedUsers());
+        const fetched = await getManagedUsers();
+        console.log("[UsersPage] Loaded users:", fetched);
+        setUsers(fetched);
       } catch (e) {
-        console.error(e);
+        console.error("[UsersPage] Failed to load users:", e);
       } finally {
         setIsLoading(false);
       }
@@ -241,7 +243,7 @@ const UsersPage = () => {
               className="rounded-xl border border-white/20 bg-white/10 p-5 shadow-lg backdrop-blur-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
             >
               <div className="space-y-1.5">
-                <h3 className="text-lg font-semibold text-white">{user.name}</h3>
+                <h3 className="text-lg font-semibold text-white">{user.name || "Unnamed User"}</h3>
                 <p className="text-sm text-gray-300">{user.email}</p>
               </div>
 
@@ -256,7 +258,7 @@ const UsersPage = () => {
 
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <Select value={user.role} onValueChange={(value) => void updateRole(user.id, value as ManagedUserRole)}>
-                  <SelectTrigger aria-label={`Change role for ${user.name}`} className="h-9 rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs text-white backdrop-blur-lg hover:bg-white/10 data-[placeholder]:text-gray-300">
+                  <SelectTrigger aria-label={`Change role for ${user.name || user.email}`} className="h-9 rounded-lg border border-white/20 bg-white/10 px-2.5 text-xs text-white backdrop-blur-lg hover:bg-white/10 data-[placeholder]:text-gray-300">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border border-white/10 bg-slate-900 text-white">

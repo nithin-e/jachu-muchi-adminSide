@@ -9,10 +9,15 @@ import {
 import { IEnquiryRepository } from "../../repositories/interfaces/IEnquiryRepository";
 import { throwBadRequest, throwNotFound } from "../../utils/http-errors.helper";
 import { IEnquiryService } from "../interfaces/IEnquiryService";
+import { IMailDispatchService } from "../interfaces/IMailDispatchService";
 import { MESSAGES } from "../../constants/messages";
+import { EnquiryPayload } from "../../types/Outreachtypes";
 
 export class EnquiryService implements IEnquiryService {
-  constructor(private readonly enquiryRepository: IEnquiryRepository) {}
+  constructor(
+    private readonly enquiryRepository: IEnquiryRepository,
+    private readonly mailDispatchService: IMailDispatchService
+  ) {}
 
   async getAllEnquiries(): Promise<IEnquiryDocument[]> {
     return this.enquiryRepository.findAll();
@@ -128,6 +133,29 @@ export class EnquiryService implements IEnquiryService {
     if (!updated) {
       throwNotFound(MESSAGES.ENQUIRY.NOT_FOUND);
     }
+
+    const emailPayload: EnquiryPayload = {
+      fullName: updated.name,
+      emailOrPhone: updated.email || updated.phone,
+      email: updated.email || undefined,
+      phone: updated.phone || undefined,
+      course: updated.course,
+      message: updated.message,
+      notes: trimmed,
+    };
+
+    this.mailDispatchService
+      .sendNotesEmail(emailPayload)
+      .then((result) => {
+        console.log("[EnquiryService] Notes email dispatch complete:", {
+          success: result.success,
+          deliveredTo: result.deliveredTo,
+          failedTo: result.failedTo,
+        });
+      })
+      .catch((err) => {
+        console.error("[EnquiryService] Background notes email dispatch failed:", err);
+      });
 
     return updated;
   }

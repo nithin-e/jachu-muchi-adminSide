@@ -17,12 +17,14 @@ export class BranchController {
   async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       const data = await BranchModel.find().sort({ createdAt: -1 });
-
+     console.log('check the data',data)
       return res.status(StatusCode.OK).json({
         success: true,
         data,
       });
     } catch (error) {
+      console.log('catch aaahnu',error);
+      
       return next(error);
     }
   }

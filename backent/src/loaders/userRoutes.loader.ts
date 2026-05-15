@@ -10,6 +10,7 @@ import bannerRouter from "../routes/user/banner.routes";
 import articleRouter from "../routes/user/article.routes";
 import categoryRouter from "../routes/user/category.routes";
 import BranchRouter from "../routes/user/branch.routes";
+import contactEnquiryRouter from "../routes/user/contactEnquiry.routes";
 
 export function loadUserRoutes(app: Application): void {
   app.use("/api/courses", courseRoutes);
@@ -18,10 +19,11 @@ export function loadUserRoutes(app: Application): void {
   app.use("/api/enquiries", enquiryRoutes);
   app.use("/api/gallery", galleryRouter);
   app.use("/api/testimonials", testimonialRouter);
-  app.use("/api/banners", bannerRouter);
+  app.use("/api/admin/banners", bannerRouter);
   app.use("/api/articles", articleRouter);
   app.use("/api/categories", categoryRouter);
-  app.use("/api/admin/branches", BranchRouter);
+  app.use("/api/branches", BranchRouter);
+  app.use("/api/contact", contactEnquiryRouter);
   
 }
 

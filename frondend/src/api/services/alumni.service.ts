@@ -1,8 +1,8 @@
 import { api } from "../client";
 import type { Alumni } from "@/lib/alumni-store";
 
-export const ALUMNI_LIST_PATH = "/api/alumni/all";
-const ALUMNI_BASE_PATH = "/api/alumni";
+export const ALUMNI_LIST_PATH = "/api/admin/alumni/all";
+const ALUMNI_BASE_PATH = "/api/admin/alumni";
 export const alumniDetailPath = (id: string) => `${ALUMNI_BASE_PATH}/${id}`;
 
 type AlumniApiRow = {
@@ -10,6 +10,7 @@ type AlumniApiRow = {
   name: string;
   role?: string;
   company?: string;
+  place?: string;
   profileImageUrl?: string;
 };
 
@@ -35,6 +36,7 @@ const mapApiRowToAlumni = (row: AlumniApiRow): Alumni => ({
   name: row.name,
   role: row.role ?? "",
   company: row.company ?? "",
+  place: row.place ?? "",
   image: row.profileImageUrl ?? "",
 });
 
@@ -43,6 +45,7 @@ const rowToAlumni = (raw: Record<string, unknown>): Alumni => ({
   name: String(raw.name ?? ""),
   role: String(raw.role ?? ""),
   company: String(raw.company ?? ""),
+  place: String(raw.place ?? ""),
   image:
     typeof raw.image === "string"
       ? raw.image
@@ -85,6 +88,7 @@ export const createAlumni = async (payload: Omit<Alumni, "id">): Promise<Alumni>
     name: payload.name,
     role: payload.role,
     company: payload.company,
+    place: payload.place,
     ...(payload.image ? { profileImageUrl: payload.image } : {}),
   });
   const row = isRecord(res.data) && isRecord(res.data.data) ? res.data.data : res.data;
@@ -102,6 +106,7 @@ export const updateAlumniApi = async (id: string, payload: Omit<Alumni, "id">): 
     name: payload.name,
     role: payload.role,
     company: payload.company,
+    place: payload.place,
     ...(payload.image ? { profileImageUrl: payload.image } : {}),
   });
 };

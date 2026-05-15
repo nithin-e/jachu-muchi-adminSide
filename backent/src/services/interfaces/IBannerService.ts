@@ -9,4 +9,5 @@ export interface IBannerService {
   ): Promise<IBannerDocument>;
   deleteBanner(bannerId: string): Promise<void>;
   getBannerById(bannerId: string): Promise<IBannerDocument>;
+  toggleStatus(bannerId: string): Promise<IBannerDocument>;
 }

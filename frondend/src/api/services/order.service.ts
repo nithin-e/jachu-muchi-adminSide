@@ -1,10 +1,9 @@
 import { api } from "../client";
 import type { Order } from "@/types";
 
-export const ORDERS_LIST_PATH = "/api/orders/";
-/** JSONPlaceholder: customer lookup for todo.userId. Replace when real API embeds customer on order. */
-export const ORDERS_CUSTOMERS_PATH = "/api/users";
-export const orderDetailPath = (id: string) => `/api/orders/${id}`;
+export const ORDERS_LIST_PATH = "/api/admin/orders/";
+export const ORDERS_CUSTOMERS_PATH = "/api/admin/users";
+export const orderDetailPath = (id: string) => `/api/admin/orders/${id}`;
 
 type JsonPlaceholderTodo = {
   id: number;

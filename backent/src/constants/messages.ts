@@ -16,6 +16,8 @@ export const MESSAGES = {
     USER_NOT_FOUND: "User not found",
     INVALID_PASSWORD: "Invalid password",
     ACCOUNT_INACTIVE: "Account is inactive",
+    UNAUTHORIZED: "Unauthorized access",
+    FORBIDDEN: "You don't have permission to access this resource",
   },
 
   ERROR: {
@@ -219,6 +221,11 @@ export const MESSAGES = {
     TITLE_REQUIRED: "Title is required",
     CATEGORY_REQUIRED: "Category is required",
     IMAGE_REQUIRED: "Image is required",
+  },
+
+  UPLOAD: {
+    SUCCESS: "Image uploaded successfully",
+    NO_FILE: "No image file uploaded. Use form-data with key 'image'",
   },
 } as const;
 

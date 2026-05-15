@@ -19,6 +19,7 @@ router.put(
   bannerUploadMiddleware.handle.bind(bannerUploadMiddleware),
   bannerController.update.bind(bannerController)
 );
+router.patch("/:id", bannerController.toggleStatus.bind(bannerController));
 router.delete("/:id", bannerController.delete.bind(bannerController));
 
 export default router;

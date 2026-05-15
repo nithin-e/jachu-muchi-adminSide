@@ -6,12 +6,6 @@ export interface CreateCourseInput {
   duration: string;
   CourseOverview: string;
   eligibility: string;
-  university: string;
-  college: string;
-  courseRoll: string;
-  syllabus?: string;
-  courseHighlights?: string;
-  careerOutcomes?: string;
   status?: CourseStatus;
   imageUrl?: string;
 }
@@ -22,12 +16,6 @@ export interface UpdateCourseInput {
   duration: string;
   CourseOverview: string;
   eligibility: string;
-  university: string;
-  college: string;
-  courseRoll: string;
-  syllabus?: string;
-  courseHighlights?: string;
-  careerOutcomes?: string;
   status?: CourseStatus;
   imageUrl?: string;
 }

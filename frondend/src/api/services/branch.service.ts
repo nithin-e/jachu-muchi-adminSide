@@ -1,8 +1,8 @@
 import { api } from "../client";
 import type { Branch, BranchStatus } from "@/lib/branch-store";
 
-export const BRANCHES_LIST_PATH = "/api/branches/all";
-const BRANCHES_BASE_PATH = "/api/branches";
+export const BRANCHES_LIST_PATH = "/api/admin/branches/all";
+const BRANCHES_BASE_PATH = "/api/admin/branches";
 export const branchDetailPath = (id: string) => `${BRANCHES_BASE_PATH}/${id}`;
 
 type BranchApiRow = {

@@ -1,7 +1,7 @@
 import { api } from "../client";
 
-export const COURSES_LIST_PATH = "/api/courses/all";
-const COURSES_BASE_PATH = "/api/courses";
+export const COURSES_LIST_PATH = "/api/admin/courses/all";
+const COURSES_BASE_PATH = "/api/admin/courses";
 const courseDetailPath = (id: string) => `${COURSES_BASE_PATH}/${id}`;
 
 export type CourseListItem = {
@@ -10,22 +10,21 @@ export type CourseListItem = {
   type: string;
   duration: string;
   eligibility: string;
-  keyDetails: string;
+  courseOverview: string;
   status: "Active" | "Inactive";
   image: string;
 };
 
 export type CoursePayload = {
-  // New backend shape
   courseName?: string;
-  keyDetails?: string;
+  courseOverview?: string;
+  CourseOverview?: string;
   duration?: string;
   eligibility?: string;
   type?: string;
   imageUrl?: string;
   imageFile?: File | null;
   status?: "Active" | "Inactive";
-  // Backward-compat keys used by existing UI calls
   title?: string;
   body?: string;
   image?: string;
@@ -43,6 +42,7 @@ type CourseListApiRow = {
   description?: string;
   status?: boolean | "Active" | "Inactive";
   imageUrl?: string;
+  CourseOverview?:string
 };
 
 const isRecord = (x: unknown): x is Record<string, unknown> =>
@@ -56,14 +56,19 @@ const getApiBaseUrl = (): string => {
   return import.meta.env?.VITE_API_URL || "http://localhost:5001";
 };
 
+
 const toAbsoluteImageUrl = (imageUrl?: string): string => {
   if (!imageUrl) return "";
   if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
-  const apiBase = getApiBaseUrl();
-  if (imageUrl.startsWith("/uploads")) {
-    return `${apiBase}${imageUrl}`;
-  }
-  return `${apiBase}/uploads/courses/${imageUrl}`;
+  
+  // Strip /api suffix from base URL for static file serving
+  const apiBase = getApiBaseUrl().replace(/\/api$/, "");
+  
+  const result = imageUrl.startsWith("/uploads")
+    ? `${apiBase}${imageUrl}`
+    : `${apiBase}/uploads/courses/${imageUrl}`;
+  
+  return result;
 };
 
 const mapListRowToUi = (item: CourseListApiRow): CourseListItem => ({
@@ -72,7 +77,7 @@ const mapListRowToUi = (item: CourseListApiRow): CourseListItem => ({
   type: item.type || item.category || "General",
   duration: item.duration ?? "",
   eligibility: item.eligibility ?? "",
-  keyDetails: (item.keyDetails || item.description) ?? "",
+  courseOverview: (item.CourseOverview || item.keyDetails || item.description) ?? "",
   status:
     item.status === "Active" || item.status === true
       ? "Active"
@@ -93,7 +98,7 @@ export const mapCoursesResponse = (data: unknown): CourseListItem[] => {
     console.warn("[course.service] Response data is not an array:", actual);
     return [];
   }
-  
+
   console.log("[course.service] Raw courses:", actual);
 
   return actual
@@ -111,18 +116,19 @@ export type CourseFormState = {
   type: string;
   duration: string;
   eligibility: string;
-  keyDetails: string;
+  CourseOverview: string;
   imageUrl?: string;
 };
 
 export const mapCourseDetailToForm = (raw: Record<string, unknown>): CourseFormState => {
   const detail = isRecord(raw.data) ? raw.data : raw;
   return {
+    
     courseName: String(detail.name ?? ""),
     type: String(detail.type ?? ""),
     duration: String(detail.duration ?? ""),
     eligibility: String(detail.eligibility ?? ""),
-    keyDetails: String(detail.keyDetails ?? ""),
+    CourseOverview: String(detail.CourseOverview ?? detail.courseOverview ?? detail.keyDetails ?? ""),
     imageUrl: typeof detail.imageUrl === "string" ? detail.imageUrl : undefined,
   };
 };
@@ -137,19 +143,19 @@ export const getCourse = async (id: string, signal?: AbortSignal): Promise<Cours
     type: "",
     duration: "",
     eligibility: "",
-    keyDetails: "",
+    CourseOverview:""
   };
 };
 
 const toFormData = (data: CoursePayload): FormData => {
   const formData = new FormData();
   const courseName = data.courseName ?? data.title ?? "";
-  const keyDetails = data.keyDetails ?? data.body ?? "";
+  const CourseOverview = data.CourseOverview ?? data.courseOverview ?? data.body ?? "";
 
   formData.append("name", courseName);
   formData.append("type", data.type ?? "");
   formData.append("duration", data.duration ?? "");
-  formData.append("keyDetails", keyDetails);
+  formData.append("CourseOverview", CourseOverview);
   formData.append("eligibility", data.eligibility ?? "");
   formData.append("status", data.status ?? "Active");
 

@@ -4,101 +4,61 @@ import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { defaultAdminSettings, getSettings, saveSettings } from "@/api/services/settings.service";
+import {
+  getSettings,
+  defaultAdminSettings,
+  updateAdminEmail,
+  updateNotificationEmails,
+  updatePassword,
+} from "@/api/services/settings.service";
 
 const SAVED_TOAST_MS = 1600;
 
-const PASSWORD_PLACEHOLDER_MASK = "••••••••";
-const inputRowClass = "flex min-w-0 flex-1 items-center gap-2";
-
-type PasswordReveal = { new: boolean; confirm: boolean };
-const initialReveal: PasswordReveal = { new: false, confirm: false };
-
-type FieldErrors = Partial<{
-  whatsAppNumber: string;
-  adminEmail: string;
-  notificationEmails: string;
-  newPassword: string;
-  confirmPassword: string;
-  general: string;
-}>;
-
-const normalizePhone = (value: string) => value.replace(/[\s-]/g, "");
-const phoneRegex = /^\+?\d{7,15}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validateSettings(params: {
-  whatsAppNumber: string;
-  adminEmail: string;
-  notificationEmails: string[];
-  editPasswordMode: boolean;
-  newPassword: string;
-  confirmPassword: string;
-}): FieldErrors {
-  const errors: FieldErrors = {};
+const sectionCardClass =
+  "rounded-xl border border-white/10 bg-white/5 p-3 shadow-lg backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl sm:p-4 md:p-5";
 
-  const nextPhone = params.whatsAppNumber.trim();
-  if (!nextPhone) errors.whatsAppNumber = "WhatsApp number is required";
-  else if (!phoneRegex.test(normalizePhone(nextPhone)))
-    errors.whatsAppNumber = "Enter a valid phone number";
-
-  const nextEmail = params.adminEmail.trim();
-  if (!nextEmail) errors.adminEmail = "Admin email is required";
-  else if (!emailRegex.test(nextEmail)) errors.adminEmail = "Enter a valid email";
-
-  const nextNotifications = params.notificationEmails.map((e) => e.trim()).filter(Boolean);
-  if (!nextNotifications.length) {
-    errors.notificationEmails = "At least 1 notification email is required";
-  } else if (nextNotifications.some((e) => !emailRegex.test(e))) {
-    errors.notificationEmails = "All notification emails must be valid";
-  }
-
-  // Only validate password if user entered a new password (or confirmation) while editing.
-  if (params.editPasswordMode) {
-    const nextNew = params.newPassword.trim();
-    const nextConfirm = params.confirmPassword.trim();
-    const wantsChange = Boolean(nextNew || nextConfirm);
-    if (wantsChange) {
-      if (!nextNew) errors.newPassword = "New password is required";
-      else if (nextNew.length < 8) errors.newPassword = "New password must be at least 8 characters";
-      if (!nextConfirm) errors.confirmPassword = "Confirm password is required";
-      else if (nextNew && nextConfirm !== nextNew)
-        errors.confirmPassword = "New password and confirmation do not match";
-    }
-  }
-
-  return errors;
-}
+type NotificationEmail = { id: string; email: string };
 
 const SettingsPage = () => {
-  const [whatsAppNumber, setWhatsAppNumber] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
+  const [notificationEmails, setNotificationEmails] = useState<NotificationEmail[]>([]);
   const [notificationInput, setNotificationInput] = useState("");
-  const [notificationEmails, setNotificationEmails] = useState<string[]>([]);
+
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [editPasswordMode, setEditPasswordMode] = useState(false);
-  const [showPassword, setShowPassword] = useState<PasswordReveal>(initialReveal);
+  const [showPassword, setShowPassword] = useState<{ current: boolean; new: boolean; confirm: boolean }>({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [saveError, setSaveError] = useState("");
+  const [adminEmailError, setAdminEmailError] = useState("");
+  const [notificationError, setNotificationError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
-  const [saved, setSaved] = useState(false);
+  const [adminEmailSaved, setAdminEmailSaved] = useState(false);
+  const [notificationSaved, setNotificationSaved] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [loadError, setLoadError] = useState("");
-  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const resetPasswordUi = useCallback(() => {
-    setNewPassword("");
-    setConfirmPassword("");
-    setEditPasswordMode(false);
-    setShowPassword(initialReveal);
-  }, []);
+  const adminEmailSavedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notificationSavedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const passwordSavedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      if (adminEmailSavedTimerRef.current) clearTimeout(adminEmailSavedTimerRef.current);
+      if (notificationSavedTimerRef.current) clearTimeout(notificationSavedTimerRef.current);
+      if (passwordSavedTimerRef.current) clearTimeout(passwordSavedTimerRef.current);
     };
   }, []);
 
@@ -112,7 +72,6 @@ const SettingsPage = () => {
       try {
         const data = await getSettings(controller.signal);
         if (cancelled) return;
-        setWhatsAppNumber(data.whatsAppNumber);
         setAdminEmail(data.adminEmail);
         setNotificationEmails(data.notificationEmails);
       } catch (e) {
@@ -120,7 +79,6 @@ const SettingsPage = () => {
         if (!cancelled) {
           console.error(e);
           setLoadError("Could not load settings.");
-          setWhatsAppNumber(defaultAdminSettings.whatsAppNumber);
           setAdminEmail(defaultAdminSettings.adminEmail);
           setNotificationEmails([...defaultAdminSettings.notificationEmails]);
         }
@@ -135,94 +93,144 @@ const SettingsPage = () => {
     };
   }, []);
 
+  const flashSaved = useCallback(
+    (setter: React.Dispatch<React.SetStateAction<boolean>>, timerRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>) => {
+      setter(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setter(false), SAVED_TOAST_MS);
+    },
+    [],
+  );
+
+  const handleSaveAdminEmail = useCallback(async () => {
+    setAdminEmailError("");
+    const trimmed = adminEmail.trim();
+    if (!trimmed) {
+      setAdminEmailError("Admin email is required");
+      return;
+    }
+    if (!emailRegex.test(trimmed)) {
+      setAdminEmailError("Enter a valid email");
+      return;
+    }
+
+    setSavingEmail(true);
+    try {
+      await updateAdminEmail(trimmed);
+      flashSaved(setAdminEmailSaved, adminEmailSavedTimerRef);
+    } catch (e) {
+      console.error(e);
+      setAdminEmailError("Could not save admin email. Please try again.");
+    } finally {
+      setSavingEmail(false);
+    }
+  }, [adminEmail, flashSaved]);
+
   const addNotificationEmail = useCallback(() => {
     const value = notificationInput.trim();
-    if (!value) return;
-    setNotificationEmails((prev) => [...prev, value]);
+    if (!value || !emailRegex.test(value)) return;
+    setNotificationEmails((prev) => [...prev, { id: `local-${Date.now()}`, email: value }]);
     setNotificationInput("");
-    setFieldErrors((e) => ({ ...e, notificationEmails: undefined }));
+    setNotificationError("");
   }, [notificationInput]);
 
-  const removeNotificationEmail = useCallback((email: string) => {
-    setNotificationEmails((prev) => prev.filter((x) => x !== email));
-    setFieldErrors((e) => ({ ...e, notificationEmails: undefined }));
+  const removeNotificationEmail = useCallback((item: NotificationEmail) => {
+    setNotificationEmails((prev) => prev.filter((x) => x.id !== item.id));
+    setNotificationError("");
   }, []);
 
-  const toggleReveal = useCallback((key: keyof PasswordReveal) => {
+  const handleSaveNotifications = useCallback(async () => {
+    setNotificationError("");
+
+    const inputTrimmed = notificationInput.trim();
+    const allEmails = [
+      ...notificationEmails.map((item) => item.email.trim()),
+      ...(inputTrimmed ? [inputTrimmed] : []),
+    ];
+    const filtered = allEmails.filter((email) => email && emailRegex.test(email));
+
+    if (filtered.length === 0) {
+      setNotificationError("At least 1 valid notification email is required");
+      return;
+    }
+
+    setSavingNotifications(true);
+    try {
+      const saved = await updateNotificationEmails(filtered);
+      setNotificationEmails(saved);
+      setNotificationInput("");
+      flashSaved(setNotificationSaved, notificationSavedTimerRef);
+    } catch (e) {
+      console.error(e);
+      setNotificationError("Could not save notification emails. Please try again.");
+    } finally {
+      setSavingNotifications(false);
+    }
+  }, [notificationEmails, notificationInput, flashSaved]);
+
+  const toggleReveal = useCallback((key: "current" | "new" | "confirm") => {
     setShowPassword((s) => ({ ...s, [key]: !s[key] }));
   }, []);
 
   const beginPasswordEdit = useCallback(() => {
-    setSaveError("");
-    setFieldErrors((e) => ({
-      ...e,
-      newPassword: undefined,
-      confirmPassword: undefined,
-    }));
+    setPasswordError("");
+    setCurrentPassword("");
     setNewPassword("");
-    setConfirmPassword("");
+    setConfirmNewPassword("");
     setEditPasswordMode(true);
-    setShowPassword(initialReveal);
+    setShowPassword({ current: false, new: false, confirm: false });
   }, []);
 
   const cancelPasswordEdit = useCallback(() => {
-    setSaveError("");
-    setFieldErrors((e) => ({
-      ...e,
-      newPassword: undefined,
-      confirmPassword: undefined,
-    }));
-    resetPasswordUi();
-  }, [resetPasswordUi]);
+    setPasswordError("");
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setEditPasswordMode(false);
+    setShowPassword({ current: false, new: false, confirm: false });
+  }, []);
 
-  const handleSave = useCallback(async () => {
-    setSaveError("");
-    setFieldErrors({});
+  const handleSavePassword = useCallback(async () => {
+    setPasswordError("");
 
-    const errors = validateSettings({
-      whatsAppNumber,
-      adminEmail,
-      notificationEmails,
-      editPasswordMode,
-      newPassword,
-      confirmPassword,
-    });
+    const cur = currentPassword.trim();
+    const next = newPassword.trim();
+    const confirm = confirmNewPassword.trim();
 
-    if (Object.keys(errors).length) {
-      setFieldErrors(errors);
+    if (!cur) {
+      setPasswordError("Current password is required");
+      return;
+    }
+    if (!next) {
+      setPasswordError("New password is required");
+      return;
+    }
+    if (next.length < 8) {
+      setPasswordError("New password must be at least 8 characters");
+      return;
+    }
+    if (next !== confirm) {
+      setPasswordError("New password and confirmation do not match");
       return;
     }
 
-    setSaving(true);
+    setSavingPassword(true);
     try {
-      await saveSettings({
-        whatsAppNumber: whatsAppNumber.trim(),
-        adminEmail: adminEmail.trim(),
-        notificationEmails: notificationEmails.map((e) => e.trim()).filter(Boolean),
-        ...(editPasswordMode && newPassword.trim()
-          ? { newPassword: newPassword.trim() }
-          : {}),
-      });
-
-      resetPasswordUi();
-      setSaved(true);
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-      savedTimerRef.current = setTimeout(() => setSaved(false), SAVED_TOAST_MS);
+      await updatePassword(cur, next);
+      setPasswordError("");
+      flashSaved(setPasswordSaved, passwordSavedTimerRef);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setEditPasswordMode(false);
+      setShowPassword({ current: false, new: false, confirm: false });
     } catch (e) {
       console.error(e);
-      setSaveError("Could not save settings. Check your new password and try again.");
+      setPasswordError("Could not update password. Check your current password and try again.");
     } finally {
-      setSaving(false);
+      setSavingPassword(false);
     }
-  }, [
-    adminEmail,
-    confirmPassword,
-    editPasswordMode,
-    newPassword,
-    notificationEmails,
-    resetPasswordUi,
-    whatsAppNumber,
-  ]);
+  }, [currentPassword, newPassword, confirmNewPassword, flashSaved]);
 
   if (loading) {
     return (
@@ -237,184 +245,236 @@ const SettingsPage = () => {
     <div className="space-y-6">
       <PageHeader
         title="Global Settings"
-        description="Load settings with one request; save with another."
+        description="Manage admin email, notifications, and password independently."
       />
 
-      {loadError ? <p className="text-sm text-amber-400">{loadError} Showing defaults.</p> : null}
+      {loadError ? (
+        <p className="text-sm text-amber-400">{loadError} Showing defaults.</p>
+      ) : null}
 
-      <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-white/80 shadow-lg backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl sm:p-4 md:p-5">
-        <div className="space-y-4">
+      {/* Section 1 — Admin Email */}
+      <div className={sectionCardClass}>
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium text-white/90">Admin Email</p>
+            <p className="text-xs text-white/45 mt-0.5">
+              The primary email address for the admin account.
+            </p>
+          </div>
           <div className="space-y-1.5">
-            <Label className="text-white/50">WhatsApp Number</Label>
-            <Input value={whatsAppNumber} onChange={(e) => setWhatsAppNumber(e.target.value)} />
-            {fieldErrors.whatsAppNumber ? (
+            <Label className="text-white/50">Email</Label>
+            <Input
+              type="email"
+              value={adminEmail}
+              onChange={(e) => {
+                setAdminEmail(e.target.value);
+                setAdminEmailError("");
+              }}
+            />
+            {adminEmailError ? (
               <p className="text-sm text-amber-400" role="alert">
-                {fieldErrors.whatsAppNumber}
+                {adminEmailError}
               </p>
             ) : null}
           </div>
+          <Button type="button" disabled={savingEmail} onClick={() => void handleSaveAdminEmail()}>
+            {savingEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Save Email
+          </Button>
+          {adminEmailSaved ? (
+            <span className="ml-3 text-xs font-medium text-green-400" aria-live="polite">
+              ✓ Saved
+            </span>
+          ) : null}
+        </div>
+      </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-white/50">Admin Email</Label>
-            <Input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
-            {fieldErrors.adminEmail ? (
-              <p className="text-sm text-amber-400" role="alert">
-                {fieldErrors.adminEmail}
-              </p>
-            ) : null}
+      {/* Section 2 — Notification Emails */}
+      <div className={sectionCardClass}>
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium text-white/90">Notification Emails</p>
+            <p className="text-xs text-white/45 mt-0.5">
+              Emails that will receive system notifications. Add or remove addresses below.
+            </p>
           </div>
-
-          <div className="space-y-2">
-            <Label className="text-white/50">Notification Emails</Label>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                value={notificationInput}
-                onChange={(e) => setNotificationInput(e.target.value)}
-                placeholder="Add notification email..."
-              />
-              <Button type="button" variant="outline" onClick={addNotificationEmail}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              value={notificationInput}
+              onChange={(e) => {
+                setNotificationInput(e.target.value);
+                setNotificationError("");
+              }}
+              placeholder="Add notification email..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addNotificationEmail();
+                }
+              }}
+            />
+            <Button type="button" variant="outline" onClick={addNotificationEmail}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          {notificationEmails.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {notificationEmails.map((email) => (
+              {notificationEmails.map((item) => (
                 <span
-                  key={email}
+                  key={item.id}
                   className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/80"
                 >
-                  {email}
+                  {item.email}
                   <button
                     type="button"
-                    onClick={() => removeNotificationEmail(email)}
+                    onClick={() => removeNotificationEmail(item)}
                     className="rounded-full p-0.5 transition-colors hover:bg-white/10"
-                    aria-label={`Remove ${email}`}
+                    aria-label={`Remove ${item.email}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
                 </span>
               ))}
             </div>
-            {fieldErrors.notificationEmails ? (
-              <p className="text-sm text-amber-400" role="alert">
-                {fieldErrors.notificationEmails}
-              </p>
-            ) : null}
+          ) : (
+            <p className="text-xs text-white/35 italic">No notification emails added yet.</p>
+          )}
+          {notificationError ? (
+            <p className="text-sm text-amber-400" role="alert">
+              {notificationError}
+            </p>
+          ) : null}
+          <Button type="button" disabled={savingNotifications} onClick={() => void handleSaveNotifications()}>
+            {savingNotifications ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Save Notifications
+          </Button>
+          {notificationSaved ? (
+            <span className="ml-3 text-xs font-medium text-green-400" aria-live="polite">
+              ✓ Saved
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Section 3 — Change Password */}
+      <div className={sectionCardClass}>
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium text-white/90">Change Password</p>
+            <p className="text-xs text-white/45 mt-0.5">
+              Update your admin password. New password must be at least 8 characters.
+            </p>
           </div>
 
-          <div className="border-t border-white/10 pt-4 space-y-4">
-            <div>
-              <p className="text-sm font-medium text-white/90">Password</p>
-              <p className="text-xs text-white/45 mt-0.5">
-                Click Edit to set a new password.
-              </p>
-            </div>
+          {!editPasswordMode ? (
+            <Button type="button" variant="outline" onClick={beginPasswordEdit}>
+              Change Password
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-white/50">Current Password</Label>
+                <div className="flex min-w-0 items-center gap-2">
+                  <Input
+                    className="min-w-0 flex-1"
+                    type={showPassword.current ? "text" : "password"}
+                    autoComplete="current-password"
+                    value={currentPassword}
+                    onChange={(e) => {
+                      setCurrentPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    aria-label={showPassword.current ? "Hide current password" : "Show current password"}
+                    aria-pressed={showPassword.current}
+                    onClick={() => toggleReveal("current")}
+                  >
+                    {showPassword.current ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                  </Button>
+                </div>
+              </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-white/50">Password</Label>
-              <div className={inputRowClass}>
-                {!editPasswordMode ? (
-                  <Input className="min-w-0 flex-1" value={PASSWORD_PLACEHOLDER_MASK} readOnly />
-                ) : null}
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="shrink-0"
-                  onClick={() => (editPasswordMode ? cancelPasswordEdit() : beginPasswordEdit())}
-                >
-                  {editPasswordMode ? "Cancel" : "Edit"}
+              <div className="space-y-1.5">
+                <Label className="text-white/50">New Password</Label>
+                <div className="flex min-w-0 items-center gap-2">
+                  <Input
+                    className="min-w-0 flex-1"
+                    type={showPassword.new ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    aria-label={showPassword.new ? "Hide new password" : "Show new password"}
+                    aria-pressed={showPassword.new}
+                    onClick={() => toggleReveal("new")}
+                  >
+                    {showPassword.new ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-white/50">Confirm New Password</Label>
+                <div className="flex min-w-0 items-center gap-2">
+                  <Input
+                    className="min-w-0 flex-1"
+                    type={showPassword.confirm ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={confirmNewPassword}
+                    onChange={(e) => {
+                      setConfirmNewPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    aria-label={showPassword.confirm ? "Hide confirm password" : "Show confirm password"}
+                    aria-pressed={showPassword.confirm}
+                    onClick={() => toggleReveal("confirm")}
+                  >
+                    {showPassword.confirm ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                  </Button>
+                </div>
+              </div>
+
+              {passwordError ? (
+                <p className="text-sm text-amber-400" role="alert">
+                  {passwordError}
+                </p>
+              ) : null}
+
+              <div className="flex items-center gap-3 pt-1">
+                <Button type="button" disabled={savingPassword} onClick={() => void handleSavePassword()}>
+                  {savingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Update Password
+                </Button>
+                <Button type="button" variant="outline" onClick={cancelPasswordEdit}>
+                  Cancel
                 </Button>
               </div>
+              {passwordSaved ? (
+                <span className="text-xs font-medium text-green-400" aria-live="polite">
+                  ✓ Saved
+                </span>
+              ) : null}
             </div>
-
-            {editPasswordMode ? (
-              <div className="space-y-4 pl-0 sm:border-l sm:border-white/10 sm:pl-4">
-                <div className="space-y-1.5">
-                  <Label className="text-white/50">New password</Label>
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Input
-                      className="min-w-0 flex-1"
-                      type={showPassword.new ? "text" : "password"}
-                      autoComplete="new-password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      aria-label={showPassword.new ? "Hide new password" : "Show new password"}
-                      aria-pressed={showPassword.new}
-                      onClick={() => toggleReveal("new")}
-                    >
-                      {showPassword.new ? (
-                        <EyeOff className="h-4 w-4" aria-hidden />
-                      ) : (
-                        <Eye className="h-4 w-4" aria-hidden />
-                      )}
-                    </Button>
-                  </div>
-                  {fieldErrors.newPassword ? (
-                    <p className="text-sm text-amber-400" role="alert">
-                      {fieldErrors.newPassword}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-white/50">Confirm new password</Label>
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Input
-                      className="min-w-0 flex-1"
-                      type={showPassword.confirm ? "text" : "password"}
-                      autoComplete="new-password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      aria-label={
-                        showPassword.confirm ? "Hide confirm password" : "Show confirm password"
-                      }
-                      aria-pressed={showPassword.confirm}
-                      onClick={() => toggleReveal("confirm")}
-                    >
-                      {showPassword.confirm ? (
-                        <EyeOff className="h-4 w-4" aria-hidden />
-                      ) : (
-                        <Eye className="h-4 w-4" aria-hidden />
-                      )}
-                    </Button>
-                  </div>
-                  {fieldErrors.confirmPassword ? (
-                    <p className="text-sm text-amber-400" role="alert">
-                      {fieldErrors.confirmPassword}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="pt-2">
-            {saveError ? (
-              <p className="mb-2 text-sm text-amber-400" role="alert">
-                {saveError}
-              </p>
-            ) : null}
-            <Button type="button" disabled={saving} onClick={() => void handleSave()}>
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save Settings
-            </Button>
-            {saved ? (
-              <span className="ml-3 text-xs font-medium text-green-400" aria-live="polite">
-                Saved.
-              </span>
-            ) : null}
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -422,5 +482,3 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
-
-

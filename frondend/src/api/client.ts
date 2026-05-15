@@ -40,6 +40,13 @@ export class ApiRequestError extends Error {
 export const isApiRequestError = (error: unknown): error is ApiRequestError =>
   error instanceof ApiRequestError;
 
+/** Callback fired when the API returns 401 Unauthorized (invalid/expired token). */
+let unauthorizedHandler: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: (() => void) | null) => {
+  unauthorizedHandler = handler;
+};
+
 const tryGetAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
   try {
@@ -106,6 +113,9 @@ const request = async <T>(path: string, init?: RequestInit): Promise<ApiResponse
 
     const data = await parseResponseBody<T>(response);
     if (!response.ok) {
+      if (response.status === 401 && unauthorizedHandler) {
+        unauthorizedHandler();
+      }
       const messageFromBody = inferBodyMessage(data);
       const message = messageFromBody
         ? `API request failed with status ${response.status}: ${messageFromBody}`

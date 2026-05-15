@@ -8,6 +8,7 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const path_1 = __importDefault(require("path"));
 const auth_routes_1 = __importDefault(require("./routes/admin/auth.routes"));
+const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
 const cors_config_1 = require("./config/cors.config");
 const error_middleware_1 = require("./middlewares/error.middleware");
 const logger_middleware_1 = require("./middlewares/logger.middleware");
@@ -18,6 +19,7 @@ const userRoutes_loader_1 = require("./loaders/userRoutes.loader");
 class AppServer {
     constructor() {
         this.app = (0, express_1.default)();
+        console.log("🚀 AppServer INIT"); // ✅ DEBUG
         this.loadMiddlewares();
         this.loadRoutes();
         this.loadErrorHandling();
@@ -33,17 +35,26 @@ class AppServer {
         this.app.options(/.*/, (0, cors_1.default)(cors_config_1.corsOptions));
     }
     loadRoutes() {
+        console.log("🔥 LOAD ROUTES STARTED"); // ✅ DEBUG
         // Shared (no auth required)
         this.app.use("/api/admin/auth", auth_routes_1.default);
         this.app.use("/api/auth", auth_routes_1.default);
-        // Segregated by concern
+        this.app.use("/api/upload", upload_routes_1.default);
+        // Admin + User routes
         (0, adminRoutes_loader_1.loadAdminRoutes)(this.app);
         (0, userRoutes_loader_1.loadUserRoutes)(this.app);
+        // Test route (IMPORTANT DEBUG)
+        this.app.get("/test-route", (_req, res) => {
+            res.send("OK - SERVER WORKING");
+        });
         this.app.get("/", (_req, res) => {
             res.json({ message: messages_1.MESSAGES.APP.BACKEND_RUNNING });
         });
         this.app.get("/api/health", (_req, res) => {
-            res.json({ status: "ok", timestamp: new Date().toISOString() });
+            res.json({
+                status: "ok",
+                timestamp: new Date().toISOString(),
+            });
         });
     }
     loadErrorHandling() {

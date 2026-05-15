@@ -23,12 +23,14 @@ const NewsDetailPage = () => {
 
     let cancelled = false;
     setLoading(true);
+    console.log("[NewsDetailPage] Fetching article id:", id);
     getNewsById(id)
       .then((data) => {
+        console.log("[NewsDetailPage] Received article:", data);
         if (!cancelled) setArticle(data);
       })
       .catch((err) => {
-        console.error(err);
+        console.error("[NewsDetailPage] Error fetching article:", err);
         if (!cancelled) setArticle(null);
       })
       .finally(() => {
@@ -101,7 +103,7 @@ const NewsDetailPage = () => {
             <Calendar className="h-4 w-4" />
             {article.date}
           </div>
-          <p className="whitespace-pre-wrap leading-7 text-gray-200">{article.description}</p>
+          <p className="whitespace-pre-wrap leading-7 text-gray-200">{article.details || article.description}</p>
         </div>
       </article>
     </div>

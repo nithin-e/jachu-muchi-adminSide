@@ -7,8 +7,6 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const dns_1 = __importDefault(require("dns"));
 const http_1 = __importDefault(require("http"));
 const path_1 = __importDefault(require("path"));
-const app_1 = __importDefault(require("./app"));
-const mongo_config_1 = require("./config/mongo.config");
 const envPath = path_1.default.resolve(process.cwd(), ".env");
 const envResult = dotenv_1.default.config({ path: envPath, quiet: true });
 if (envResult.error) {
@@ -30,8 +28,10 @@ if (dnsServers.length > 0) {
 const PORT = Number(process.env.PORT) || 5001;
 const startServer = async () => {
     try {
-        await (0, mongo_config_1.connectDB)();
-        const app = new app_1.default().getServer();
+        const { connectDB } = await Promise.resolve().then(() => require("./config/mongo.config"));
+        await connectDB();
+        const { default: AppServer } = await Promise.resolve().then(() => require("./app"));
+        const app = new AppServer().getServer();
         const httpServer = http_1.default.createServer(app);
         httpServer.on("error", (err) => {
             if (err.code === "EADDRINUSE") {

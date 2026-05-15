@@ -28,7 +28,7 @@ type CourseCardProps = {
 const CourseCard = memo(function CourseCard({ course, onEdit, onRequestDelete }: CourseCardProps) {
   const name = course.courseName || "Untitled course";
   const type = course.type || "General";
-  const keyDetails = course.keyDetails || "";
+  const overview = course.courseOverview || "";
   const duration = course.duration ?? "N/A";
   const eligibility = course.eligibility?.trim() ? course.eligibility : "N/A";
 
@@ -41,13 +41,16 @@ const CourseCard = memo(function CourseCard({ course, onEdit, onRequestDelete }:
           loading="lazy"
           decoding="async"
           className="h-44 w-full object-cover"
-          onError={(e) => {
-            const img = e.currentTarget;
-            if (img.src !== CARD_FALLBACK) {
-              img.onerror = null;
-              img.src = CARD_FALLBACK;
-            }
-          }}
+   onError={(e) => {
+  console.log("[img error] failed src:", e.currentTarget.src); // 👈 add
+  const img = e.currentTarget;
+  if (img.src !== CARD_FALLBACK) {
+    img.onerror = null;
+    img.src = CARD_FALLBACK;
+  }
+}
+        
+        }
         />
       </div>
 
@@ -64,7 +67,7 @@ const CourseCard = memo(function CourseCard({ course, onEdit, onRequestDelete }:
         </div>
 
         <p className="line-clamp-2 text-sm text-gray-300">
-          {keyDetails || "No key details available."}
+          {overview || "No overview available."}
         </p>
 
         <div className="flex gap-2 pt-2">
@@ -133,7 +136,7 @@ const ProductsPage = () => {
       const q = deferredSearch;
       return (
         course.courseName.toLowerCase().includes(q) ||
-        course.keyDetails.toLowerCase().includes(q) ||
+        course.courseOverview.toLowerCase().includes(q) ||
         course.type.toLowerCase().includes(q) ||
         course.duration.toLowerCase().includes(q) ||
         course.eligibility.toLowerCase().includes(q)

@@ -1,8 +1,28 @@
 import { api } from "../client";
 import type { BannerItem, BannerStatus } from "@/lib/banner-store";
 
-export const BANNERS_LIST_PATH = "/api/banners/";
-export const bannerDetailPath = (id: string) => `/api/banners/${id}`;
+export const BANNERS_LIST_PATH = "/api/admin/banners";
+export const bannerDetailPath = (id: string) => `/api/admin/banners/${id}`;
+
+const getApiBaseUrl = (): string => {
+  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  return "";
+};
+
+const toAbsoluteImageUrl = (imageUrl: string): string => {
+  if (!imageUrl) return "";
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  if (/^data:/.test(imageUrl)) return imageUrl;
+  if (/^blob:/.test(imageUrl)) return imageUrl;
+
+  const apiBase = getApiBaseUrl();
+
+  return imageUrl.startsWith("/uploads")
+    ? `${apiBase}${imageUrl}`
+    : `${apiBase}/uploads/banners/${imageUrl}`;
+};
 
 type JsonPlaceholderPhoto = {
   id: number;
@@ -28,26 +48,47 @@ const isBannerRow = (x: unknown): x is BannerItem =>
 const mapPhotoToBanner = (p: JsonPlaceholderPhoto): BannerItem => ({
   id: String(p.id),
   title: p.title || `Banner ${p.id}`,
-  image: p.url,
+  image: toAbsoluteImageUrl(p.url),
   status: p.id % 2 === 0 ? "Active" : "Inactive",
 });
 
-const rowToBanner = (raw: Record<string, unknown>): BannerItem => ({
-  id: String(raw.id),
-  title: String(raw.title ?? ""),
-  image: String(raw.image ?? raw.url ?? ""),
-  status: raw.status === "Active" || raw.status === "Inactive" ? raw.status : "Active",
-});
+const rowToBanner = (raw: Record<string, unknown>): BannerItem => {
+  const rawUrl = String(raw.imageUrl ?? raw.image ?? raw.url ?? "");
+  return {
+    id: String(raw._id ?? raw.id),
+    title: String(raw.title ?? ""),
+    image: toAbsoluteImageUrl(rawUrl),
+    status: raw.status === "Active" || raw.status === "Inactive" ? (raw.status as "Active" | "Inactive") : "Active",
+  };
+};
+
+const isBlobUrl = (value: string): boolean => value.startsWith("blob:");
+
+const blobToDataUrl = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("Failed to read image"));
+    reader.readAsDataURL(blob);
+  });
+
+const imageToBase64 = async (image: string): Promise<string> => {
+  if (!isBlobUrl(image)) return image;
+  const res = await fetch(image);
+  const blob = await res.blob();
+  return blobToDataUrl(blob);
+};
 
 export const getBanners = async (): Promise<BannerItem[]> => {
-  const res = await api.get<unknown>(`${BANNERS_LIST_PATH}?_limit=24`);
-  const data = res.data;
+  const res = await api.get<unknown>(`${BANNERS_LIST_PATH}/all?_limit=30`);
+
+  const data = (res.data as any)?.data;
+
   if (!Array.isArray(data) || data.length === 0) return [];
-  if (isBannerRow(data[0])) return data as BannerItem[];
-  if (isJpPhoto(data[0])) {
-    return (data as JsonPlaceholderPhoto[]).slice(0, 12).map(mapPhotoToBanner);
-  }
-  return data.map((item) => rowToBanner(item as Record<string, unknown>));
+
+  return data.map((item: any) =>
+    rowToBanner(item as Record<string, unknown>)
+  );
 };
 
 export const getBannerById = async (id: string): Promise<BannerItem | null> => {
@@ -65,35 +106,28 @@ export const getBannerById = async (id: string): Promise<BannerItem | null> => {
   }
 };
 
-const remoteImageUrl = (image: string): string => {
-  if (image.startsWith("http")) return image;
-  return `https://picsum.photos/seed/${Date.now()}/1200/500`;
-};
-
 export const createBanner = async (payload: Omit<BannerItem, "id">): Promise<BannerItem> => {
+  const base64Image = await imageToBase64(payload.image);
   const res = await api.post<Record<string, unknown>>(BANNERS_LIST_PATH, {
-    albumId: 1,
     title: payload.title,
-    url: remoteImageUrl(payload.image),
-    thumbnailUrl: remoteImageUrl(payload.image),
+    image: base64Image,
     status: payload.status,
   });
-  const id = res.data.id != null ? String(res.data.id) : Date.now().toString();
+  const responseData = (res.data as any)?.data ?? res.data;
+  const id = responseData._id != null ? String(responseData._id) : responseData.id != null ? String(responseData.id) : Date.now().toString();
   return {
     id,
     title: payload.title,
-    image: typeof res.data.url === "string" ? String(res.data.url) : remoteImageUrl(payload.image),
+    image: typeof responseData.imageUrl === "string" ? toAbsoluteImageUrl(responseData.imageUrl) : payload.image,
     status: payload.status,
   };
 };
 
 export const updateBannerApi = async (id: string, payload: Omit<BannerItem, "id">): Promise<void> => {
+  const base64Image = await imageToBase64(payload.image);
   await api.put(bannerDetailPath(id), {
-    id: Number(id) || id,
-    albumId: 1,
     title: payload.title,
-    url: remoteImageUrl(payload.image),
-    thumbnailUrl: remoteImageUrl(payload.image),
+    image: base64Image,
     status: payload.status,
   });
 };

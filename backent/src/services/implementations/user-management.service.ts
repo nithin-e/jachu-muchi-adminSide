@@ -27,7 +27,7 @@ export class UserManagementService implements IUserManagementService {
   async createUser(input: CreateAdminUserInput): Promise<IUserDocument> {
     const name = input.name.trim();
     const email = input.email.trim().toLowerCase();
-    const password = input.password;
+    const password = input.password || "Admin@123";
     const role = input.role;
     const status = input.status;
 

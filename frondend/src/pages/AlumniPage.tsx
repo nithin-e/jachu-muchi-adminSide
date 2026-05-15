@@ -216,6 +216,7 @@ const AlumniPage = () => {
                     <h3 className="text-lg font-semibold text-white">{item.name}</h3>
                     <p className="text-sm text-gray-400">{item.role}</p>
                     <p className="mt-2 text-sm font-medium text-blue-400">{item.company}</p>
+                    {item.place ? <p className="text-xs text-gray-500">{item.place}</p> : null}
                   </div>
 
                   {/* Action Buttons */}

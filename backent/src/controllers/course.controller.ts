@@ -12,66 +12,30 @@ import {
 import { StatusCode } from "../constants/statusCodes";
 import { MESSAGES } from "../constants/messages";
 
+
 function mapBodyToCreateInput(
   body: Record<string, unknown>,
   imageUrl?: string
 ): CreateCourseInput {
-  const name =
-    (typeof body.courseName === "string" && body.courseName) ||
-    (typeof body.name === "string" && body.name) ||
-    "";
+  const name = typeof body.name === "string" ? body.name : "";
 
-  const type =
-    (typeof body.courseType === "string" && body.courseType) ||
-    (typeof body.type === "string" && body.type) ||
-    "";
+  const type = typeof body.type === "string" ? body.type : "";
 
-  const duration =
-    typeof body.duration === "string" ? body.duration : "";
+  const duration = typeof body.duration === "string" ? body.duration : "";
 
   const CourseOverview =
-    (typeof body.CourseOverview === "string" && body.CourseOverview) ||
-    (typeof body.courseOverview === "string" && body.courseOverview) ||
-    (typeof body.overview === "string" && body.overview) ||
-    "";
+    typeof body.CourseOverview === "string" ? body.CourseOverview : "";
 
   const eligibility =
     typeof body.eligibility === "string" ? body.eligibility : "";
 
-  const university =
-    (typeof body.university === "string" && body.university) ||
-    "";
-
-  const college =
-    (typeof body.college === "string" && body.college) ||
-    "";
-
-  const courseRoll =
-    (typeof body.courseRoll === "string" && body.courseRoll) ||
-    (typeof body.roll === "string" && body.roll) ||
-    "";
-
-  const syllabus =
-    typeof body.syllabus === "string" ? body.syllabus : undefined;
-
-  const courseHighlights =
-    typeof body.courseHighlights === "string" ? body.courseHighlights : undefined;
-
-  const careerOutcomes =
-    typeof body.careerOutcomes === "string" ? body.careerOutcomes : undefined;
-
   const statusCandidate =
-    (typeof body.status === "string" && body.status) ||
-    (typeof body.courseStatus === "string" && body.courseStatus) ||
-    undefined;
+    typeof body.status === "string" ? body.status : undefined;
 
   const status: CourseStatus | undefined =
     statusCandidate && COURSE_STATUS_VALUES.includes(statusCandidate as CourseStatus)
       ? (statusCandidate as CourseStatus)
       : undefined;
-
-  const explicitUrl =
-    typeof body.imageUrl === "string" ? body.imageUrl : undefined;
 
   return {
     name,
@@ -79,19 +43,9 @@ function mapBodyToCreateInput(
     duration,
     CourseOverview,
     eligibility,
-    university,
-    college,
-    courseRoll,
-    ...(syllabus ? { syllabus } : {}),
-    ...(courseHighlights ? { courseHighlights } : {}),
-    ...(careerOutcomes ? { careerOutcomes } : {}),
-    ...(status !== undefined ? { status } : {}),
-    ...(imageUrl
-      ? { imageUrl }
-      : explicitUrl?.trim()
-        ? { imageUrl: explicitUrl.trim() }
-        : {}),
-  }
+    status,
+    ...(imageUrl ? { imageUrl } : {}),
+  };
 }
 
 export class CourseController {
@@ -103,7 +57,6 @@ export class CourseController {
    */
   async listAll(_req: Request, res: Response, next: NextFunction){
     try {
-      console.log('broooooooooooooooooooooooooooooo');
       
       const data: ICourseDocument[] = await CourseModel.find()
         .sort({ createdAt: -1 })

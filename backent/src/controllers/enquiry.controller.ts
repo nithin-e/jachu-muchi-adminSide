@@ -48,8 +48,9 @@ export class EnquiryController {
 
   private mapListResponseData(input: any[]) {
     return input.map((doc) => {
-      const { createdAt, updatedAt, __v, ...rest } = doc;
+      const { createdAt, updatedAt, __v, _id, ...rest } = doc;
       return {
+        id: _id,
         ...rest,
         date: createdAt || (doc as any).date,
       };

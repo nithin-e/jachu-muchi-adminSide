@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { loginApi } from "@/api/services/auth.service";
+import { setUnauthorizedHandler } from "@/api/client";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -69,6 +70,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false);
     setAdminEmail("");
   };
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout();
+      window.location.replace('/admin/login');
+    };
+    setUnauthorizedHandler(handleUnauthorized);
+    return () => setUnauthorizedHandler(null);
+  }, [logout]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, adminEmail, login, logout }}>

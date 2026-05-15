@@ -2,8 +2,6 @@ import dotenv from "dotenv";
 import dns from "dns";
 import http from "http";
 import path from "path";
-import AppServer from "./app";
-import { connectDB } from "./config/mongo.config";
 
 const envPath = path.resolve(process.cwd(), ".env");
 const envResult = dotenv.config({ path: envPath, quiet: true });
@@ -33,7 +31,10 @@ const PORT = Number(process.env.PORT) || 5001;
 
 const startServer = async () => {
   try {
+    const { connectDB } = await import("./config/mongo.config");
     await connectDB();
+
+    const { default: AppServer } = await import("./app");
     const app = new AppServer().getServer();
     const httpServer = http.createServer(app);
 
@@ -57,5 +58,4 @@ const startServer = async () => {
   }
 };
 
-
-void startServer(); 
+void startServer();

@@ -1,4 +1,5 @@
 import { LogOut, Menu, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 
@@ -8,6 +9,12 @@ interface AdminNavbarProps {
 
 const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
   const { adminEmail, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-white/10 bg-slate-900/60 px-4 backdrop-blur-xl">
@@ -33,7 +40,7 @@ const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
           <span className="max-w-[140px] truncate text-sm text-gray-300">{adminEmail || "Admin"}</span>
         </div>
 
-        <Button variant="ghost" size="sm" onClick={logout} className="text-gray-300 transition-all duration-200 hover:scale-[1.02] hover:bg-white/10 hover:text-gray-100">
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-300 transition-all duration-200 hover:scale-[1.02] hover:bg-white/10 hover:text-gray-100">
           <LogOut className="h-4 w-4" />
         </Button>
       </div>
