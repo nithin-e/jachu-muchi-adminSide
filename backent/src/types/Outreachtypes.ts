@@ -1,12 +1,13 @@
 export interface EnquiryPayload {
   fullName: string;
-  emailOrPhone: string;  // Email or phone number
+  emailOrPhone: string;
   course: string;
-  name?: string;           // Required or make optional if sometimes missing
+  name?: string;
   email?: string;
   phone?: string;
   message: string;
   subject?: string; 
+  notes?: string;
 }
 
 export interface MailDispatchResult {

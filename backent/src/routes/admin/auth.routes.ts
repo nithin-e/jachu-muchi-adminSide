@@ -8,7 +8,7 @@ const router = Router();
 router.post(
   "/login",
   validateLogin,
-  handleValidation,
+ 
   authController.login.bind(authController)
 );
 

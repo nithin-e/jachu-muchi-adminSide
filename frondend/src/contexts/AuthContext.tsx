@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const handleUnauthorized = () => {
       logout();
-      window.location.href = '/login';
+      window.location.replace('/admin/login');
     };
     setUnauthorizedHandler(handleUnauthorized);
     return () => setUnauthorizedHandler(null);

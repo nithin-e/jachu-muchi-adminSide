@@ -4,6 +4,26 @@ import type { BannerItem, BannerStatus } from "@/lib/banner-store";
 export const BANNERS_LIST_PATH = "/api/admin/banners";
 export const bannerDetailPath = (id: string) => `/api/admin/banners/${id}`;
 
+const getApiBaseUrl = (): string => {
+  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  return "";
+};
+
+const toAbsoluteImageUrl = (imageUrl: string): string => {
+  if (!imageUrl) return "";
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  if (/^data:/.test(imageUrl)) return imageUrl;
+  if (/^blob:/.test(imageUrl)) return imageUrl;
+
+  const apiBase = getApiBaseUrl();
+
+  return imageUrl.startsWith("/uploads")
+    ? `${apiBase}${imageUrl}`
+    : `${apiBase}/uploads/banners/${imageUrl}`;
+};
+
 type JsonPlaceholderPhoto = {
   id: number;
   albumId: number;
@@ -28,16 +48,19 @@ const isBannerRow = (x: unknown): x is BannerItem =>
 const mapPhotoToBanner = (p: JsonPlaceholderPhoto): BannerItem => ({
   id: String(p.id),
   title: p.title || `Banner ${p.id}`,
-  image: p.url,
+  image: toAbsoluteImageUrl(p.url),
   status: p.id % 2 === 0 ? "Active" : "Inactive",
 });
 
-const rowToBanner = (raw: Record<string, unknown>): BannerItem => ({
-  id: String(raw._id ?? raw.id),
-  title: String(raw.title ?? ""),
-  image: String(raw.imageUrl ?? raw.image ?? raw.url ?? ""),
-  status: raw.status === "Active" || raw.status === "Inactive" ? (raw.status as "Active" | "Inactive") : "Active",
-});
+const rowToBanner = (raw: Record<string, unknown>): BannerItem => {
+  const rawUrl = String(raw.imageUrl ?? raw.image ?? raw.url ?? "");
+  return {
+    id: String(raw._id ?? raw.id),
+    title: String(raw.title ?? ""),
+    image: toAbsoluteImageUrl(rawUrl),
+    status: raw.status === "Active" || raw.status === "Inactive" ? (raw.status as "Active" | "Inactive") : "Active",
+  };
+};
 
 const isBlobUrl = (value: string): boolean => value.startsWith("blob:");
 
@@ -95,7 +118,7 @@ export const createBanner = async (payload: Omit<BannerItem, "id">): Promise<Ban
   return {
     id,
     title: payload.title,
-    image: typeof responseData.imageUrl === "string" ? responseData.imageUrl : payload.image,
+    image: typeof responseData.imageUrl === "string" ? toAbsoluteImageUrl(responseData.imageUrl) : payload.image,
     status: payload.status,
   };
 };

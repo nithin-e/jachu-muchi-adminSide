@@ -51,6 +51,7 @@ const CourseFormPage = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [imageError, setImageError] = useState("");
+  const [formError, setFormError] = useState("");
   const [editLoading, setEditLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
 
@@ -152,6 +153,7 @@ const CourseFormPage = () => {
         imageFile,
       };
 
+      setFormError("");
       setSubmitting(true);
       try {
         if (isEdit && id) {
@@ -161,7 +163,11 @@ const CourseFormPage = () => {
         }
         navigate("/products");
       } catch (error) {
-        console.error(error);
+        const msg =
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again.";
+        setFormError(msg);
       } finally {
         setSubmitting(false);
       }
@@ -294,6 +300,11 @@ const CourseFormPage = () => {
             </div>
           </div>
 
+          {formError ? (
+            <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {formError}
+            </p>
+          ) : null}
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="submit"

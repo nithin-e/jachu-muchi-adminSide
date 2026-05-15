@@ -14,6 +14,26 @@ const GALLERY_PATH = "/api/admin/gallery";
 const JP_FALLBACK_PATH = "/api/admin/photos";
 export const galleryItemPath = (id: string) => `${GALLERY_PATH}/${id}`;
 
+const getApiBaseUrl = (): string => {
+  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  return "";
+};
+
+const toAbsoluteImageUrl = (imageUrl: string): string => {
+  if (!imageUrl) return "";
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  if (/^data:/.test(imageUrl)) return imageUrl;
+  if (/^blob:/.test(imageUrl)) return imageUrl;
+
+  const apiBase = getApiBaseUrl();
+
+  return imageUrl.startsWith("/uploads")
+    ? `${apiBase}${imageUrl}`
+    : `${apiBase}/uploads/gallery/${imageUrl}`;
+};
+
 type JsonPlaceholderPhoto = {
   id: number;
   albumId: number;
@@ -52,16 +72,17 @@ const mapPhotoToItem = (p: JsonPlaceholderPhoto): GalleryItem => ({
   id: String(p.id),
   title: p.title || `Photo ${p.id}`,
   category: albumIdToCategory(p.albumId),
-  image: p.url,
+  image: toAbsoluteImageUrl(p.url),
 });
 
 const rowToGalleryItem = (raw: Record<string, unknown>): GalleryItem => {
   const category = isGalleryCategory(raw.category) ? raw.category : "Campus";
+  const rawUrl = String(raw.image ?? raw.imageUrl ?? raw.url ?? "");
   return {
     id: String(raw.id ?? raw._id ?? ""),
     title: String(raw.title ?? ""),
     category,
-    image: String(raw.image ?? raw.imageUrl ?? raw.url ?? ""),
+    image: toAbsoluteImageUrl(rawUrl),
   };
 };
 
@@ -157,16 +178,19 @@ export const createGalleryItem = async (
 
   const responseData = isRecord(res.data) ? res.data : {};
   const id = responseData.id != null ? String(responseData.id) : Date.now().toString();
+  const returnImage =
+    typeof responseData.image === "string"
+      ? responseData.image
+      : typeof responseData.imageUrl === "string"
+        ? responseData.imageUrl
+        : base64Image
+          ? base64Image
+          : remoteUrl(payload.image);
   return {
     id,
     title: payload.title,
     category: payload.category,
-    image:
-      typeof responseData.image === "string"
-        ? String(responseData.image)
-        : base64Image
-          ? base64Image
-          : remoteUrl(payload.image),
+    image: toAbsoluteImageUrl(returnImage),
   };
 };
 

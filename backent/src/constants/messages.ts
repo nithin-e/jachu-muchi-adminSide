@@ -222,6 +222,11 @@ export const MESSAGES = {
     CATEGORY_REQUIRED: "Category is required",
     IMAGE_REQUIRED: "Image is required",
   },
+
+  UPLOAD: {
+    SUCCESS: "Image uploaded successfully",
+    NO_FILE: "No image file uploaded. Use form-data with key 'image'",
+  },
 } as const;
 
 // Optional type export for consumers

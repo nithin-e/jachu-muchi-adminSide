@@ -8,6 +8,7 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const path_1 = __importDefault(require("path"));
 const auth_routes_1 = __importDefault(require("./routes/admin/auth.routes"));
+const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
 const cors_config_1 = require("./config/cors.config");
 const error_middleware_1 = require("./middlewares/error.middleware");
 const logger_middleware_1 = require("./middlewares/logger.middleware");
@@ -38,6 +39,7 @@ class AppServer {
         // Shared (no auth required)
         this.app.use("/api/admin/auth", auth_routes_1.default);
         this.app.use("/api/auth", auth_routes_1.default);
+        this.app.use("/api/upload", upload_routes_1.default);
         // Admin + User routes
         (0, adminRoutes_loader_1.loadAdminRoutes)(this.app);
         (0, userRoutes_loader_1.loadUserRoutes)(this.app);

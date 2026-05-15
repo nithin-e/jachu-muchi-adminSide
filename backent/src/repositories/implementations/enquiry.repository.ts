@@ -4,7 +4,7 @@ import {
   EnquiryStatus,
   IEnquiryDocument,
 } from "../../models/Enquiry";
-import { IEnquiryRepository } from "../interfaces/IEnquiryRepository";
+import { CreateEnquiryPayload, IEnquiryRepository } from "../interfaces/IEnquiryRepository";
 
 function normalizeForSearch(input: string): string {
   return input
@@ -48,6 +48,19 @@ function scoreDocument(doc: IEnquiryDocument, normalizedSearch: string): number 
 }
 
 export class EnquiryRepository implements IEnquiryRepository {
+  async create(payload: CreateEnquiryPayload): Promise<IEnquiryDocument> {
+    const doc = new EnquiryModel({
+      name: payload.name,
+      phone: payload.phone,
+      email: payload.email,
+      course: payload.course,
+      message: payload.message,
+      type: payload.type || "Normal Enquiry",
+      status: payload.status || "New",
+    });
+    return doc.save();
+  }
+
   async findAll(): Promise<IEnquiryDocument[]> {
     return EnquiryModel.find()
       .sort({ createdAt: -1 })

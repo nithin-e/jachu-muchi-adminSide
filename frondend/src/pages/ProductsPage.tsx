@@ -41,13 +41,16 @@ const CourseCard = memo(function CourseCard({ course, onEdit, onRequestDelete }:
           loading="lazy"
           decoding="async"
           className="h-44 w-full object-cover"
-          onError={(e) => {
-            const img = e.currentTarget;
-            if (img.src !== CARD_FALLBACK) {
-              img.onerror = null;
-              img.src = CARD_FALLBACK;
-            }
-          }}
+   onError={(e) => {
+  console.log("[img error] failed src:", e.currentTarget.src); // 👈 add
+  const img = e.currentTarget;
+  if (img.src !== CARD_FALLBACK) {
+    img.onerror = null;
+    img.src = CARD_FALLBACK;
+  }
+}
+        
+        }
         />
       </div>
 

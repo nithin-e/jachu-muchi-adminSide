@@ -18,6 +18,7 @@ export type CourseListItem = {
 export type CoursePayload = {
   courseName?: string;
   courseOverview?: string;
+  CourseOverview?: string;
   duration?: string;
   eligibility?: string;
   type?: string;
@@ -41,6 +42,7 @@ type CourseListApiRow = {
   description?: string;
   status?: boolean | "Active" | "Inactive";
   imageUrl?: string;
+  CourseOverview?:string
 };
 
 const isRecord = (x: unknown): x is Record<string, unknown> =>
@@ -54,14 +56,19 @@ const getApiBaseUrl = (): string => {
   return import.meta.env?.VITE_API_URL || "http://localhost:5001";
 };
 
+
 const toAbsoluteImageUrl = (imageUrl?: string): string => {
   if (!imageUrl) return "";
   if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
-  const apiBase = getApiBaseUrl();
-  if (imageUrl.startsWith("/uploads")) {
-    return `${apiBase}${imageUrl}`;
-  }
-  return `${apiBase}/uploads/courses/${imageUrl}`;
+  
+  // Strip /api suffix from base URL for static file serving
+  const apiBase = getApiBaseUrl().replace(/\/api$/, "");
+  
+  const result = imageUrl.startsWith("/uploads")
+    ? `${apiBase}${imageUrl}`
+    : `${apiBase}/uploads/courses/${imageUrl}`;
+  
+  return result;
 };
 
 const mapListRowToUi = (item: CourseListApiRow): CourseListItem => ({
@@ -70,7 +77,7 @@ const mapListRowToUi = (item: CourseListApiRow): CourseListItem => ({
   type: item.type || item.category || "General",
   duration: item.duration ?? "",
   eligibility: item.eligibility ?? "",
-  courseOverview: (item.courseOverview || item.keyDetails || item.description) ?? "",
+  courseOverview: (item.CourseOverview || item.keyDetails || item.description) ?? "",
   status:
     item.status === "Active" || item.status === true
       ? "Active"
@@ -109,18 +116,19 @@ export type CourseFormState = {
   type: string;
   duration: string;
   eligibility: string;
-  courseOverview: string;
+  CourseOverview: string;
   imageUrl?: string;
 };
 
 export const mapCourseDetailToForm = (raw: Record<string, unknown>): CourseFormState => {
   const detail = isRecord(raw.data) ? raw.data : raw;
   return {
+    
     courseName: String(detail.name ?? ""),
     type: String(detail.type ?? ""),
     duration: String(detail.duration ?? ""),
     eligibility: String(detail.eligibility ?? ""),
-    courseOverview: String(detail.CourseOverview ?? detail.courseOverview ?? detail.keyDetails ?? ""),
+    CourseOverview: String(detail.CourseOverview ?? detail.courseOverview ?? detail.keyDetails ?? ""),
     imageUrl: typeof detail.imageUrl === "string" ? detail.imageUrl : undefined,
   };
 };
@@ -135,19 +143,19 @@ export const getCourse = async (id: string, signal?: AbortSignal): Promise<Cours
     type: "",
     duration: "",
     eligibility: "",
-    courseOverview: "",
+    CourseOverview:""
   };
 };
 
 const toFormData = (data: CoursePayload): FormData => {
   const formData = new FormData();
   const courseName = data.courseName ?? data.title ?? "";
-  const courseOverview = data.courseOverview ?? data.body ?? "";
+  const CourseOverview = data.CourseOverview ?? data.courseOverview ?? data.body ?? "";
 
   formData.append("name", courseName);
   formData.append("type", data.type ?? "");
   formData.append("duration", data.duration ?? "");
-  formData.append("CourseOverview", courseOverview);
+  formData.append("CourseOverview", CourseOverview);
   formData.append("eligibility", data.eligibility ?? "");
   formData.append("status", data.status ?? "Active");
 

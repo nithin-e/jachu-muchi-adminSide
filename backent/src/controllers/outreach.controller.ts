@@ -1,9 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { EnquiryPayload } from "../types/Outreachtypes";
 import { IMailDispatchService } from "../services/interfaces/IMailDispatchService";
+import { IEnquiryRepository } from "../repositories/interfaces/IEnquiryRepository";
 
 export class OutreachController {
-  constructor(private readonly mailDispatchService: IMailDispatchService) {}
+  constructor(
+    private readonly mailDispatchService: IMailDispatchService,
+    private readonly enquiryRepository: IEnquiryRepository
+  ) {}
 
   handleEnquiry = async (
     req: Request,
@@ -42,11 +46,31 @@ export class OutreachController {
         return;
       }
 
-      const payload: EnquiryPayload = {
-        fullName:     fullName.trim(),
-        emailOrPhone: emailOrPhone.trim(),
-        course:       course?.trim() || "",
-        message:      message.trim(),
+      const email = isValidEmail ? emailOrPhone.trim().toLowerCase() : "";
+      const phone = isValidPhone ? emailOrPhone.trim().replace(/\D/g, "") : "";
+
+      const enquiryPayload = {
+        name: fullName.trim(),
+        phone: phone || "N/A",
+        email,
+        course: course?.trim() || "N/A",
+        message: message.trim(),
+      };
+
+      // ── Save enquiry to database ─────────────────────────────────────
+      const savedEnquiry = await this.enquiryRepository.create(enquiryPayload);
+
+      console.log(
+        "[OutreachController] Enquiry saved to DB:",
+        savedEnquiry._id
+      );
+
+      const mailPayload: EnquiryPayload = {
+        fullName: enquiryPayload.name,
+        emailOrPhone: enquiryPayload.email || enquiryPayload.phone,
+        email: enquiryPayload.email || undefined,
+        course: enquiryPayload.course,
+        message: enquiryPayload.message,
       };
 
       // ── Respond immediately — don't make the user wait for emails ────
@@ -59,7 +83,7 @@ export class OutreachController {
 
       // ── Fire-and-forget mail dispatch ────────────────────────────────
       this.mailDispatchService
-        .dispatchEnquiryMails(payload)
+        .dispatchEnquiryMails(mailPayload)
         .then((result) => {
           console.log("[OutreachController] Mail dispatch complete:", {
             success:     result.success,

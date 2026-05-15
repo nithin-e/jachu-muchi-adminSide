@@ -4,7 +4,18 @@ import {
   IEnquiryDocument,
 } from "../../models/Enquiry";
 
+export interface CreateEnquiryPayload {
+  name: string;
+  phone: string;
+  email: string;
+  course: string;
+  message: string;
+  type?: EnquiryType;
+  status?: EnquiryStatus;
+}
+
 export interface IEnquiryRepository {
+  create(payload: CreateEnquiryPayload): Promise<IEnquiryDocument>;
   findAll(): Promise<IEnquiryDocument[]>;
   findById(enquiryId: string): Promise<IEnquiryDocument | null>;
 

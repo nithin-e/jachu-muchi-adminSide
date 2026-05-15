@@ -1,17 +1,18 @@
+require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const MONGO_URI = 'mongodb+srv://admin:12345678aA@cluster0.z8ynxsc.mongodb.net/giridhar-eye-institute';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:12345678aA@cluster0.z8ynxsc.mongodb.net/giridhar-eye-institute';
 
 async function createAdmin() {
   try {
+    console.log(`[create-admin] Connecting to: ${MONGO_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')}`);
     await mongoose.connect(MONGO_URI);
     console.log('Connected to MongoDB\n');
 
     const db = mongoose.connection.db;
     const adminsCollection = db.collection('admins');
     
-    // Check if user already exists
     const existingUser = await adminsCollection.findOne({ email: 'admin@gmail.com' });
     
     if (existingUser) {
@@ -19,7 +20,6 @@ async function createAdmin() {
       console.log('Status:', existingUser.status);
       console.log('Role:', existingUser.role);
       
-      // Update password if needed
       const newPasswordHash = await bcrypt.hash('admin@123', 10);
       await adminsCollection.updateOne(
         { email: 'admin@gmail.com' },
@@ -27,7 +27,6 @@ async function createAdmin() {
       );
       console.log('\nPassword updated to "admin@123" and status set to Active');
     } else {
-      // Create new admin user
       const passwordHash = await bcrypt.hash('admin@123', 10);
       
       const newUser = {
@@ -49,6 +48,7 @@ async function createAdmin() {
     
     await mongoose.disconnect();
     console.log('\nDone! You can now login with admin@gmail.com / admin@123');
+    process.exit(0);
   } catch (error) {
     console.error('Error:', error.message);
     process.exit(1);
