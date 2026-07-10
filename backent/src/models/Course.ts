@@ -19,6 +19,7 @@ export interface ICourseDocument extends Document {
   eligibility: string;
   status?: CourseStatus;
   imageUrl?: string;
+  priorityOrder?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,7 @@ const courseSchema = new Schema<ICourseDocument>(
       default: COURSE_STATUS.ACTIVE,
     },
     imageUrl: { type: String, trim: true, default: undefined },
+    priorityOrder: { type: Number, default: null },
   },
   { timestamps: true }
 );

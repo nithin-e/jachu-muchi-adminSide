@@ -91,6 +91,30 @@ export class CourseRepository implements ICourseRepository {
     return CourseModel.findByIdAndDelete(id);
   }
 
+  async setPriority(
+    id: string,
+    priorityOrder: number | null
+  ): Promise<ICourseDocument | null> {
+    if (priorityOrder === null) {
+      return CourseModel.findByIdAndUpdate(
+        id,
+        { $unset: { priorityOrder: "" } },
+        { new: true }
+      );
+    }
+    return CourseModel.findByIdAndUpdate(
+      id,
+      { $set: { priorityOrder } },
+      { new: true }
+    );
+  }
+
+  async listAllPrioritized(): Promise<ICourseDocument[]> {
+    return CourseModel.find({ priorityOrder: { $ne: null } })
+      .sort({ priorityOrder: 1 })
+      .lean();
+  }
+
   async setCourseImageById(
     id: string,
     imageUrl: string | null

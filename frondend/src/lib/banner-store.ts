@@ -72,10 +72,11 @@ export const deleteBanner = (id: string) => {
 };
 
 export const toggleBannerStatus = (id: string) => {
-  const next = readBanners().map((banner) =>
-    banner.id === id
-      ? { ...banner, status: banner.status === "Active" ? "Inactive" : "Active" }
-      : banner,
-  );
+  const banners = readBanners();
+  const next: BannerItem[] = banners.map((banner) => {
+    if (banner.id !== id) return banner;
+    const newStatus: BannerStatus = banner.status === "Active" ? "Inactive" : "Active";
+    return { id: banner.id, title: banner.title, image: banner.image, status: newStatus };
+  });
   writeBanners(next);
 };

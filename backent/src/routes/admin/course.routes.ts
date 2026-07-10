@@ -24,5 +24,7 @@ router.put(
   courseController.update.bind(courseController)
 );
 router.delete("/:id", courseController.delete.bind(courseController));
+router.patch("/:id/priority", courseController.setPriority.bind(courseController));
+router.get("/prioritized", courseController.getPrioritized.bind(courseController));
 
 export default router;

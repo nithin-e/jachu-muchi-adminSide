@@ -53,6 +53,8 @@ export const MESSAGES = {
 
     INVALID_ID: "Invalid course id",
     NOT_FOUND: "Course not found",
+    PRIORITY_UPDATED_SUCCESS: "Course priority updated successfully",
+    PRIORITY_ORDER_POSITIVE: "priorityOrder must be a positive number",
     INVALID_STATUS_VALUE: "Invalid status value",
     FILTER_TYPE_STATUS_MUST_BE_ACTIVE_OR_INACTIVE: "status must be Active or Inactive",
   },
@@ -206,6 +208,23 @@ export const MESSAGES = {
     NEW_PASSWORD_MIN_6: "New password must be at least 6 characters",
     PASSWORDS_DO_NOT_MATCH: "New password and confirmation do not match",
     CURRENT_PASSWORD_INCORRECT: "Current password is incorrect",
+  },
+
+  STORE: {
+    ID_REQUIRED: "Store id is required",
+    CREATED_SUCCESS: "Store created successfully",
+    UPDATED_SUCCESS: "Store updated successfully",
+    DELETED_SUCCESS: "Store deleted successfully",
+
+    INVALID_ID: "Invalid store id",
+    NOT_FOUND: "Store not found",
+
+    NAME_REQUIRED: "Store name is required",
+    DESCRIPTION_REQUIRED: "Description is required",
+
+    IMAGE_MAX_FILES: "Maximum 5 images allowed",
+    IMAGE_MAX_SIZE: "Each image must be 5MB or less",
+    IMAGE_INVALID_TYPE: "Only PNG, JPG, JPEG, and WebP images are allowed",
   },
 
   GALLERY: {
