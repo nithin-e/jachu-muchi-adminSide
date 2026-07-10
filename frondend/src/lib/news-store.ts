@@ -1,5 +1,5 @@
 import { MOCK_NEWS } from "@/lib/mock-data";
-import { NewsItem } from "@/types";
+import type { NewsItem } from "@features/news/types";
 
 export type NewsStatus = NewsItem["status"];
 

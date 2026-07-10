@@ -15,6 +15,13 @@ export interface ICourseRepository {
     imageUrl: string | null
   ): Promise<ICourseDocument | null>;
 
+  setPriority(
+    id: string,
+    priorityOrder: number | null
+  ): Promise<ICourseDocument | null>;
+
+  listAllPrioritized(): Promise<ICourseDocument[]>;
+
   filter(params: {
     page: number;
     limit: number;

@@ -8,6 +8,7 @@ export interface CreateCourseInput {
   eligibility: string;
   status?: CourseStatus;
   imageUrl?: string;
+  priorityOrder?: number | null;
 }
 
 export interface UpdateCourseInput {
@@ -18,4 +19,5 @@ export interface UpdateCourseInput {
   eligibility: string;
   status?: CourseStatus;
   imageUrl?: string;
+  priorityOrder?: number | null;
 }

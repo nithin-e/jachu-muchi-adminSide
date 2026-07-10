@@ -16,6 +16,13 @@ export interface ICourseService {
   /** Remove image from course and delete file from disk. */
   removeCourseImage(courseId: string): Promise<ICourseDocument>;
 
+  setPriority(
+    courseId: string,
+    priorityOrder: number | null
+  ): Promise<ICourseDocument>;
+
+  getPrioritizedCourses(): Promise<ICourseDocument[]>;
+
   filterCourses(params: {
     page: number;
     limit: number;

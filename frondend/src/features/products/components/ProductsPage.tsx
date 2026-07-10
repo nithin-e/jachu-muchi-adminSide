@@ -1,0 +1,421 @@
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowUpDown, Check, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import PageHeader from "@shared/components/PageHeader";
+import DeleteModal from "@shared/components/DeleteModal";
+import { Button } from "@shared/components/ui/button";
+import { Input } from "@shared/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@shared/components/ui/pagination";
+import { deleteCourse, getCourses, setCoursePriority } from "../api/productsApi";
+import type { CourseListItem } from "../types";
+
+const CARD_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect fill='%231e293b' width='400' height='200'/%3E%3Ctext x='50%25' y='50%25' fill='%2364748b' font-family='sans-serif' font-size='14' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+type CourseCardProps = {
+  course: CourseListItem;
+  onEdit: (id: string) => void;
+  onRequestDelete: (id: string) => void;
+  onSetPriority: (id: string, priorityOrder: number | null) => void;
+  isSettingPriority: boolean;
+};
+
+const CourseCard = memo(function CourseCard({ course, onEdit, onRequestDelete, onSetPriority, isSettingPriority }: CourseCardProps) {
+  const name = course.courseName || "Untitled course";
+  const type = course.type || "General";
+  const overview = course.courseOverview || "";
+  const duration = course.duration ?? "N/A";
+  const eligibility = course.eligibility?.trim() ? course.eligibility : "N/A";
+  const [priorityInput, setPriorityInput] = useState<string>(course.priorityOrder?.toString() ?? "");
+
+  useEffect(() => {
+    setPriorityInput(course.priorityOrder?.toString() ?? "");
+  }, [course.priorityOrder]);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg transition-all duration-300 hover:shadow-2xl">
+      {course.priorityOrder ? (
+        <div className="flex items-center gap-1 bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-300">
+          <ArrowUpDown className="h-3 w-3" />
+          Priority #{course.priorityOrder}
+        </div>
+      ) : null}
+      <div className="h-44 w-full overflow-hidden bg-slate-800">
+        <img
+          src={course.image || CARD_FALLBACK}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-44 w-full object-cover"
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (img.src !== CARD_FALLBACK) {
+              img.onerror = null;
+              img.src = CARD_FALLBACK;
+            }
+          }}
+        />
+      </div>
+
+      <div className="space-y-3 p-4">
+        <h3 className="text-lg font-semibold text-white">{name}</h3>
+
+        <span className="inline-block rounded-full bg-blue-500/20 px-2 py-1 text-xs text-blue-300">
+          {type}
+        </span>
+
+        <div className="space-y-1 text-sm text-gray-400">
+          <p>Duration: {duration}</p>
+          <p>Eligibility: {eligibility}</p>
+        </div>
+
+        <p className="line-clamp-2 text-sm text-gray-300">
+          {overview || "No overview available."}
+        </p>
+
+        <div className="flex items-center gap-2 pt-2">
+          <div className="flex items-center gap-1 rounded-md bg-slate-800 px-2 py-1.5">
+            <input
+              type="number"
+              min="1"
+              placeholder="Prio"
+              value={priorityInput}
+              onChange={(e) => setPriorityInput(e.target.value)}
+              className="w-14 bg-transparent text-xs text-gray-200 outline-none placeholder:text-gray-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const val = priorityInput.trim();
+                onSetPriority(course.id, val ? Number(val) : null);
+              }}
+              disabled={isSettingPriority}
+              className="inline-flex items-center justify-center rounded bg-blue-600 p-1 text-xs text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+              title="Set priority"
+            >
+              {isSettingPriority ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => onEdit(course.id)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+            aria-label={`Edit ${name}`}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => onRequestDelete(course.id)}
+            className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-red-700"
+            aria-label={`Delete ${name}`}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const CoursesPage = () => {
+  const navigate = useNavigate();
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [settingPriority, setSettingPriority] = useState<Record<string, boolean>>({});
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
+
+  const deferredSearch = useDeferredValue(search.trim().toLowerCase());
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await getCourses(controller.signal);
+        if (!cancelled) setCourses(data);
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+        if (!cancelled) console.error(e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!deferredSearch) return courses;
+    return courses.filter((course) => {
+      const q = deferredSearch;
+      return (
+        course.courseName.toLowerCase().includes(q) ||
+        course.courseOverview.toLowerCase().includes(q) ||
+        course.type.toLowerCase().includes(q) ||
+        course.duration.toLowerCase().includes(q) ||
+        course.eligibility.toLowerCase().includes(q)
+      );
+    });
+  }, [courses, deferredSearch]);
+
+  const totalPages = useMemo(() => {
+    const total = Math.ceil(filtered.length / pageSize);
+    return total > 0 ? total : 1;
+  }, [filtered.length, pageSize]);
+
+  useEffect(() => setPage(1), [deferredSearch, pageSize]);
+  useEffect(() => setPage((p) => Math.min(p, totalPages)), [totalPages]);
+
+  const paginatedCourses = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
+
+  const onEdit = useCallback(
+    (id: string) => {
+      const selectedCourse = courses.find((course) => course.id === id);
+      navigate(`/courses/edit/${id}`, {
+        state: selectedCourse ? { course: selectedCourse } : undefined,
+      });
+    },
+    [courses, navigate],
+  );
+
+  const onRequestDelete = useCallback((id: string) => {
+    setDeleteId(id);
+  }, []);
+
+  const handleSetPriority = useCallback(async (id: string, priorityOrder: number | null) => {
+    setSettingPriority((prev) => ({ ...prev, [id]: true }));
+    try {
+      await setCoursePriority(id, priorityOrder);
+      setCourses((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, priorityOrder } : c)),
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSettingPriority((prev) => ({ ...prev, [id]: false }));
+    }
+  }, []);
+
+  const handleDelete = async () => {
+    if (deleteId === null) return;
+    try {
+      await deleteCourse(String(deleteId));
+      setCourses((prev) => prev.filter((course) => course.id !== deleteId));
+      setDeleteId(null);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 p-12 text-gray-400">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="text-sm">Loading courses…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Courses"
+        description={`${courses.length} total courses`}
+        action={(
+          <Button onClick={() => navigate("/courses/new")} size="sm">
+            <Plus className="mr-1 h-4 w-4" />
+            Add Course
+          </Button>
+        )}
+      />
+
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="max-w-xs">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
+            <Input
+              placeholder="Search courses…"
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+        </div>
+
+        <div className="flex w-full items-center justify-end md:w-auto">
+          <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
+            <SelectTrigger className="h-10 w-full rounded-lg border border-white/20 bg-white/10 text-white backdrop-blur-lg hover:bg-white/10 data-[placeholder]:text-gray-300 sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border border-white/10 bg-slate-900 text-white">
+              {[6, 9, 12].map((size) => (
+                <SelectItem
+                  key={size}
+                  value={String(size)}
+                  className="focus:bg-white/10 focus:text-white data-[state=checked]:bg-blue-500/20 data-[state=checked]:text-blue-200"
+                >
+                  {size}/page
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-xl border border-white/20 bg-white/10 p-8 text-center text-sm text-white/50 backdrop-blur-lg">
+          No courses found
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                onEdit={onEdit}
+                onRequestDelete={onRequestDelete}
+                onSetPriority={handleSetPriority}
+                isSettingPriority={settingPriority[course.id] ?? false}
+              />
+            ))}
+          </div>
+
+          {totalPages > 1 ? (
+            <div className="pt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPage((p) => Math.max(1, p - 1));
+                      }}
+                      className={page <= 1 ? "pointer-events-none opacity-50" : undefined}
+                    />
+                  </PaginationItem>
+
+                  {(() => {
+                    const window = 2;
+                    const start = Math.max(1, page - window);
+                    const end = Math.min(totalPages, page + window);
+                    const showLeftEllipsis = start > 1;
+                    const showRightEllipsis = end < totalPages;
+
+                    const pagesToShow: number[] = [];
+                    for (let p = start; p <= end; p++) pagesToShow.push(p);
+
+                    return (
+                      <>
+                        {showLeftEllipsis ? (
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(1);
+                              }}
+                              isActive={page === 1}
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                        ) : null}
+                        {showLeftEllipsis ? <PaginationEllipsis /> : null}
+
+                        {pagesToShow.map((p) => (
+                          <PaginationItem key={p}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(p);
+                              }}
+                              isActive={p === page}
+                            >
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+
+                        {showRightEllipsis ? <PaginationEllipsis /> : null}
+                        {showRightEllipsis ? (
+                          <PaginationItem>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPage(totalPages);
+                              }}
+                              isActive={page === totalPages}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ) : null}
+                      </>
+                    );
+                  })()}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPage((p) => Math.min(totalPages, p + 1));
+                      }}
+                      className={page >= totalPages ? "pointer-events-none opacity-50" : undefined}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+
+              <div className="mt-3 text-center text-sm text-gray-400">
+                Showing{" "}
+                {Math.min((page - 1) * pageSize + 1, filtered.length)}-
+                {Math.min(page * pageSize, filtered.length)} of {filtered.length}
+              </div>
+            </div>
+          ) : null}
+        </>
+      )}
+
+      <DeleteModal
+        open={deleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null);
+        }}
+        onConfirm={handleDelete}
+        title="Delete course"
+        description="This course will be permanently removed."
+      />
+    </div>
+  );
+};
+
+export default CoursesPage;

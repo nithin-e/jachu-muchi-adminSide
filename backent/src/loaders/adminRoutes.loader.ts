@@ -12,9 +12,11 @@ import userMgmtRoutes from "../routes/admin/userManagement.routes";
 import settingsRoutes from "../routes/admin/settings.routes";
 import outreachRoutes from "../routes/admin/outreach.routes";
 import enquiryRoutes from "../routes/admin/enquiry.routes";
+import storeRoutes from "../routes/admin/store.routes";
 
 
 export function loadAdminRoutes(app: Application): void {
+  app.use("/api/admin/stores", authenticateToken, storeRoutes);
   app.use("/api/admin/banners", authenticateToken, bannerRoutes);
   app.use("/api/admin/articles", authenticateToken, articleRoutes);
   app.use("/api/admin/categories", authenticateToken, categoryRoutes);

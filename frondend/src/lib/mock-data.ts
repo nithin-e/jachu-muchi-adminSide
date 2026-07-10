@@ -1,4 +1,5 @@
-import { Product, Category, Order, NewsItem, User, DashboardStats } from "@/types";
+import type { Product, Category, Order, User, DashboardStats } from "@shared/types";
+import type { NewsItem } from "@features/news/types";
 
 export const MOCK_STATS: DashboardStats = {
   totalProducts: 450,

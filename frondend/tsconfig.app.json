@@ -19,6 +19,18 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@features/*": [
+        "./src/features/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
+      ],
+      "@app/*": [
+        "./src/app/*"
+      ],
+      "@lib/*": [
+        "./src/lib/*"
       ]
     },
     "skipLibCheck": true,

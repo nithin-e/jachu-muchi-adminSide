@@ -53,13 +53,14 @@ export class CourseController {
 
   /**
    * Initial-load endpoint: returns all courses with details, no pagination.
+   * Prioritized courses first, then by createdAt desc.
    * GET /api/courses/all
    */
   async listAll(_req: Request, res: Response, next: NextFunction){
     try {
       
       const data: ICourseDocument[] = await CourseModel.find()
-        .sort({ createdAt: -1 })
+        .sort({ priorityOrder: 1, createdAt: -1 })
         .lean();
 
       return res.status(StatusCode.OK).json({
@@ -152,6 +153,44 @@ export class CourseController {
       return next(error);
     }
   }
+  /**
+   * PATCH /api/courses/:id/priority
+   */
+  async setPriority(req: Request, res: Response, next: NextFunction){
+    try {
+      const id = req.params.id as string;
+      const priorityOrder =
+        req.body.priorityOrder !== undefined && req.body.priorityOrder !== null
+          ? Number(req.body.priorityOrder)
+          : null;
+
+      const course = await this.courseService.setPriority(id, priorityOrder);
+
+      return res.status(StatusCode.OK).json({
+        success: true,
+        message: MESSAGES.COURSE.PRIORITY_UPDATED_SUCCESS,
+        data: course,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * GET /api/courses/prioritized
+   */
+  async getPrioritized(_req: Request, res: Response, next: NextFunction){
+    try {
+      const data = await this.courseService.getPrioritizedCourses();
+      return res.status(StatusCode.OK).json({
+        success: true,
+        data,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   async update(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;

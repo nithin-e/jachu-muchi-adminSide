@@ -165,6 +165,32 @@ export class CourseService implements ICourseService {
     return updated;
   }
 
+  async setPriority(
+    courseId: string,
+    priorityOrder: number | null
+  ): Promise<ICourseDocument> {
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      throwBadRequest(MESSAGES.COURSE.INVALID_ID);
+    }
+
+    if (priorityOrder !== null && (!Number.isFinite(priorityOrder) || priorityOrder < 1)) {
+      throwBadRequest(MESSAGES.COURSE.PRIORITY_ORDER_POSITIVE);
+    }
+
+    const updated = await this.courseRepository.setPriority(
+      courseId,
+      priorityOrder
+    );
+    if (!updated) {
+      throwNotFound(MESSAGES.COURSE.NOT_FOUND);
+    }
+    return updated;
+  }
+
+  async getPrioritizedCourses(): Promise<ICourseDocument[]> {
+    return this.courseRepository.listAllPrioritized();
+  }
+
   async removeCourseImage(courseId: string): Promise<ICourseDocument> {
     if (!mongoose.Types.ObjectId.isValid(courseId)) {
       throwBadRequest(MESSAGES.COURSE.INVALID_ID);
