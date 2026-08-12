@@ -2,11 +2,8 @@ export interface NewsItem {
   id: string;
   title: string;
   description: string;
-  details?: string;
-  image: string;
-  date: string;
+  details: string;
+  articleDate: string;
   status: "Published" | "Draft";
-  author?: string;
-  content?: string;
-  excerpt?: string;
+  imageUrl: string;
 }

@@ -32,7 +32,7 @@ export function ResponsiveTable<T>({ data, columns, renderActions }: ResponsiveT
   return (
     <div className="w-full">
       {/* Desktop table */}
-      <div className="hidden md:block overflow-x-auto rounded-xl border border-white/10 bg-white/5 p-1 text-white/80 shadow-lg backdrop-blur-xl">
+      <div className="hide-scrollbar hidden md:block overflow-x-auto rounded-xl border border-white/10 bg-white/5 p-1 text-white/80 shadow-lg backdrop-blur-xl">
         <table className="w-full text-xs sm:text-sm">
           <thead className="bg-white/5">
             <tr className="border-b text-left transition-colors duration-200 hover:bg-white/10">

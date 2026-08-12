@@ -12,6 +12,8 @@ type AlumniApiRow = {
   company?: string;
   place?: string;
   profileImageUrl?: string;
+  batch?: string;
+  description?: string;
 };
 
 const isAlumniRow = (x: unknown): x is Alumni =>
@@ -38,7 +40,40 @@ const mapApiRowToAlumni = (row: AlumniApiRow): Alumni => ({
   company: row.company ?? "",
   place: row.place ?? "",
   image: row.profileImageUrl ?? "",
+  batch: row.batch ?? "",
+  description: row.description ?? "",
 });
+
+const isDataUrl = (value: string): boolean => value.startsWith("data:");
+
+const dataUrlToFile = (dataUrl: string): File | null => {
+  const match = dataUrl.match(/^data:([^;,]+);base64,(.+)$/);
+  if (!match) return null;
+  const mime = match[1];
+  const ext = mime.split("/")[1]?.replace("jpeg", "jpg") ?? "png";
+  const binary = atob(match[2]);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], `profile.${ext}`, { type: mime });
+};
+
+const buildAlumniFormData = (payload: Omit<Alumni, "id">): FormData => {
+  const formData = new FormData();
+  formData.append("name", payload.name);
+  formData.append("role", payload.role);
+  formData.append("company", payload.company);
+  formData.append("place", payload.place);
+  formData.append("batch", payload.batch || "");
+  formData.append("description", payload.description || "");
+  const image = payload.image;
+  if (isDataUrl(image)) {
+    const file = dataUrlToFile(image);
+    if (file) formData.append("profileImage", file);
+  } else if (image.trim()) {
+    formData.append("profileImageUrl", image);
+  }
+  return formData;
+};
 
 const rowToAlumni = (raw: Record<string, unknown>): Alumni => ({
   id: String(raw.id ?? raw._id ?? ""),
@@ -52,6 +87,8 @@ const rowToAlumni = (raw: Record<string, unknown>): Alumni => ({
       : typeof raw.profileImageUrl === "string"
         ? raw.profileImageUrl
         : "",
+  batch: typeof raw.batch === "string" ? raw.batch : "",
+  description: typeof raw.description === "string" ? raw.description : "",
 });
 
 export const getAlumniList = async (): Promise<Alumni[]> => {
@@ -84,13 +121,7 @@ export const getAlumniById = async (id: string): Promise<Alumni | null> => {
 };
 
 export const createAlumni = async (payload: Omit<Alumni, "id">): Promise<Alumni> => {
-  const res = await api.post<Record<string, unknown>>(ALUMNI_BASE_PATH, {
-    name: payload.name,
-    role: payload.role,
-    company: payload.company,
-    place: payload.place,
-    ...(payload.image ? { profileImageUrl: payload.image } : {}),
-  });
+  const res = await api.post<Record<string, unknown>>(ALUMNI_BASE_PATH, buildAlumniFormData(payload));
   const row = isRecord(res.data) && isRecord(res.data.data) ? res.data.data : res.data;
   const id =
     isRecord(row) && row._id != null
@@ -98,17 +129,15 @@ export const createAlumni = async (payload: Omit<Alumni, "id">): Promise<Alumni>
       : isRecord(row) && row.id != null
         ? String(row.id)
         : Date.now().toString();
-  return { id, ...payload };
+  const createdImage =
+    isRecord(row) && typeof row.profileImageUrl === "string"
+      ? row.profileImageUrl
+      : payload.image;
+  return { ...payload, id, image: createdImage };
 };
 
 export const updateAlumniApi = async (id: string, payload: Omit<Alumni, "id">): Promise<void> => {
-  await api.put(alumniDetailPath(id), {
-    name: payload.name,
-    role: payload.role,
-    company: payload.company,
-    place: payload.place,
-    ...(payload.image ? { profileImageUrl: payload.image } : {}),
-  });
+  await api.put(alumniDetailPath(id), buildAlumniFormData(payload));
 };
 
 export const deleteAlumniApi = async (id: string): Promise<void> => {

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Phone, Mail, ExternalLink, Loader2 } from "lucide-react";
+import { Phone, Mail, ExternalLink, Loader2, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Enquiry } from "../types";
 import PageHeader from "@shared/components/PageHeader";
 import StatusBadge from "@shared/components/StatusBadge";
+import { Button } from "@shared/components/ui/button";
 import { ResponsiveTable } from "@shared/components/ui/ResponsiveTable";
 import { getEnquiries, updateEnquiryStatus } from "../api/enquiriesApi";
+import { formatEnquiryDate, exportEnquiriesToExcel } from "../utils";
 
 const EnquiriesPage = () => {
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
@@ -48,11 +50,26 @@ const EnquiriesPage = () => {
     }
   };
 
+  const handleExport = () => {
+    exportEnquiriesToExcel(enquiries);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Enquiries"
         description={isLoading ? "Loading…" : `${enquiries.length} total enquiries`}
+        action={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleExport}
+            disabled={isLoading || enquiries.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export to Excel
+          </Button>
+        }
       />
 
       {isLoading ? (
@@ -64,7 +81,7 @@ const EnquiriesPage = () => {
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="max-h-[70vh] overflow-y-auto rounded-xl border border-white/10"
+          className="hide-scrollbar max-h-[70vh] overflow-y-auto rounded-xl border border-white/10"
         >
           <ResponsiveTable
             data={enquiries.slice(0, visibleCount)}
@@ -101,6 +118,26 @@ const EnquiriesPage = () => {
                   <span className="flex items-center gap-1">
                     <Phone className="h-3 w-3 text-white/40" />
                     {(item as Enquiry).phone}
+                  </span>
+                ),
+                cellClassName: "text-sm text-white/55",
+              },
+              {
+                key: "course",
+                header: "Course / Subject",
+                render: (item) => (
+                  <span className="text-sm text-white/60">
+                    {(item as Enquiry).course || "—"}
+                  </span>
+                ),
+                cellClassName: "text-sm text-white/55",
+              },
+              {
+                key: "date",
+                header: "Date",
+                render: (item) => (
+                  <span className="text-sm text-white/60">
+                    {formatEnquiryDate((item as Enquiry).date)}
                   </span>
                 ),
                 cellClassName: "text-sm text-white/55",

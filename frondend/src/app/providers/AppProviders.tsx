@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@shared/components/ui/tooltip";
 import { Toaster as Sonner } from "@shared/components/ui/sonner";
@@ -9,12 +10,14 @@ const queryClient = new QueryClient();
 
 export const AppProviders = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-    </TooltipProvider>
+    <HelmetProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </TooltipProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );

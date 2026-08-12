@@ -12,6 +12,7 @@ import {
   getCourse,
   updateCourse,
 } from "../api/productsApi";
+import { getImageUrl } from "@lib/imageUrl";
 import type { CourseListItem, CoursePayload } from "../types";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -63,7 +64,7 @@ const CourseFormPage = () => {
         eligibility: stateCourse.eligibility,
         courseOverview: stateCourse.courseOverview,
       });
-      setPreviewUrl(stateCourse.image || "");
+      setPreviewUrl(getImageUrl(stateCourse.image, "courses"));
       setImageFile(null);
       setEditLoading(false);
       return;
@@ -86,7 +87,7 @@ const CourseFormPage = () => {
           eligibility: data.eligibility,
           courseOverview: data.courseOverview,
         });
-        setPreviewUrl(data.imageUrl ?? "");
+        setPreviewUrl(getImageUrl(data.imageUrl, "courses"));
         setImageFile(null);
       } catch (e) {
         if ((e as Error).name === "AbortError") return;

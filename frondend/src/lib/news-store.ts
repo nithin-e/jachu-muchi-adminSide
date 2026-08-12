@@ -16,9 +16,25 @@ const normalizeNews = (raw: unknown): NewsItem | null => {
     id,
     title: typeof item.title === "string" ? item.title : "",
     description: typeof item.description === "string" ? item.description : "",
-    image: typeof item.image === "string" ? item.image : "",
-    date: typeof item.date === "string" ? item.date : "",
+    details:
+      typeof item.details === "string"
+        ? item.details
+        : typeof item.description === "string"
+          ? item.description
+          : "",
+    articleDate:
+      typeof item.articleDate === "string"
+        ? item.articleDate
+        : typeof item.date === "string"
+          ? item.date
+          : "",
     status: item.status === "Published" || item.status === "Draft" ? item.status : "Draft",
+    imageUrl:
+      typeof item.imageUrl === "string"
+        ? item.imageUrl
+        : typeof item.image === "string"
+          ? item.image
+          : "",
   };
 };
 

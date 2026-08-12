@@ -5,6 +5,7 @@ import type { Enquiry } from "../types";
 import StatusBadge from "@shared/components/StatusBadge";
 import { Button } from "@shared/components/ui/button";
 import { getEnquiryById, updateEnquiryStatus } from "../api/enquiriesApi";
+import { formatEnquiryDate } from "../utils";
 
 const EnquiryDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -71,8 +72,8 @@ const EnquiryDetailPage = () => {
         <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
           <div><span className="text-white/40">Email</span><p className="text-white/90">{enquiry.email}</p></div>
           <div><span className="text-white/40">Phone</span><p className="text-white/90">{enquiry.phone}</p></div>
-          {enquiry.course && <div><span className="text-white/40">Course</span><p className="text-white/90">{enquiry.course}</p></div>}
-          <div><span className="text-white/40">Date</span><p className="text-white/90">{enquiry.date}</p></div>
+          {enquiry.course && <div><span className="text-white/40">Course / Subject</span><p className="text-white/90">{enquiry.course}</p></div>}
+          <div><span className="text-white/40">Date</span><p className="text-white/90">{formatEnquiryDate(enquiry.date)}</p></div>
         </div>
 
         <div className="mb-4">

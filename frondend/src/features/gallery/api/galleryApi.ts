@@ -1,4 +1,5 @@
 import { api, isApiRequestError } from "@lib/apiClient";
+import { getImageUrl } from "@lib/imageUrl";
 
 export type GalleryCategory = "Campus" | "Labs" | "Events";
 
@@ -9,30 +10,9 @@ export interface GalleryItem {
   image: string;
 }
 
-const PHOTOS_PATH = "/api/admin/photos";
 const GALLERY_PATH = "/api/admin/gallery";
 const JP_FALLBACK_PATH = "/api/admin/photos";
 export const galleryItemPath = (id: string) => `${GALLERY_PATH}/${id}`;
-
-const getApiBaseUrl = (): string => {
-  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  return "";
-};
-
-const toAbsoluteImageUrl = (imageUrl: string): string => {
-  if (!imageUrl) return "";
-  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
-  if (/^data:/.test(imageUrl)) return imageUrl;
-  if (/^blob:/.test(imageUrl)) return imageUrl;
-
-  const apiBase = getApiBaseUrl();
-
-  return imageUrl.startsWith("/uploads")
-    ? `${apiBase}${imageUrl}`
-    : `${apiBase}/uploads/gallery/${imageUrl}`;
-};
 
 type JsonPlaceholderPhoto = {
   id: number;
@@ -72,7 +52,7 @@ const mapPhotoToItem = (p: JsonPlaceholderPhoto): GalleryItem => ({
   id: String(p.id),
   title: p.title || `Photo ${p.id}`,
   category: albumIdToCategory(p.albumId),
-  image: toAbsoluteImageUrl(p.url),
+  image: getImageUrl(p.url, "gallery"),
 });
 
 const rowToGalleryItem = (raw: Record<string, unknown>): GalleryItem => {
@@ -82,38 +62,32 @@ const rowToGalleryItem = (raw: Record<string, unknown>): GalleryItem => {
     id: String(raw.id ?? raw._id ?? ""),
     title: String(raw.title ?? ""),
     category,
-    image: toAbsoluteImageUrl(rawUrl),
+    image: getImageUrl(rawUrl, "gallery"),
   };
 };
 
-const stableSeed = (input: string): string => {
-  let hash = 0;
-  for (let i = 0; i < input.length; i += 1) {
-    hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
-  }
-  return String(hash || 1);
+const isDataUrl = (value: string): boolean => value.startsWith("data:");
+
+const dataUrlToFile = (dataUrl: string): File | null => {
+  const match = dataUrl.match(/^data:([^;,]+);base64,(.+)$/);
+  if (!match) return null;
+  const mime = match[1];
+  const ext = mime.split("/")[1]?.replace("jpeg", "jpg") ?? "png";
+  const binary = atob(match[2]);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], `gallery.${ext}`, { type: mime });
 };
 
-const remoteUrl = (image: string): string =>
-  image.startsWith("http")
-    ? image
-    : `https://picsum.photos/seed/${stableSeed(image || "gallery-fallback")}/600/400`;
-
-const isBlobUrl = (value: string): boolean => value.startsWith("blob:");
-
-const blobToDataUrl = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(new Error("Failed to read image"));
-    reader.readAsDataURL(blob);
-  });
-
-const imageToBase64 = async (image: string): Promise<string> => {
-  if (!isBlobUrl(image)) return image;
-  const res = await fetch(image);
-  const blob = await res.blob();
-  return blobToDataUrl(blob);
+const buildGalleryFormData = (payload: Omit<GalleryItem, "id">): FormData => {
+  const formData = new FormData();
+  formData.append("title", payload.title);
+  formData.append("category", payload.category);
+  if (isDataUrl(payload.image)) {
+    const file = dataUrlToFile(payload.image);
+    if (file) formData.append("galleryImage", file);
+  }
+  return formData;
 };
 
 const shouldFallbackToJsonPlaceholder = (err: unknown): boolean => {
@@ -145,48 +119,53 @@ export const getGalleryItems = async (): Promise<GalleryItem[]> => {
     res = await tryGet(JP_FALLBACK_PATH);
   }
 
-  const actualData = (res.data as any)?.data ?? res.data;
+  const body = isRecord(res.data) ? res.data : {};
+  const actualData = body.data ?? res.data;
 
   return normalizeGalleryItems(actualData);
+};
+
+export const getGalleryItemById = async (id: string): Promise<GalleryItem | null> => {
+  try {
+    const res = await api.get<unknown>(galleryItemPath(id));
+    const row =
+      isRecord(res.data) && isRecord(res.data.data) ? res.data.data : res.data;
+    if (row && typeof row === "object") {
+      return rowToGalleryItem(row as Record<string, unknown>);
+    }
+    return null;
+  } catch {
+    return null;
+  }
 };
 
 export const createGalleryItem = async (
   payload: Omit<GalleryItem, "id">,
 ): Promise<GalleryItem> => {
-  const base64Image = await imageToBase64(payload.image);
-
-  let res: { data: Record<string, unknown> };
-  try {
-    res = await api.post<Record<string, unknown>>(GALLERY_PATH, {
-      title: payload.title,
-      category: payload.category,
-      image: base64Image,
-    });
-  } catch (e) {
-    if (!shouldFallbackToJsonPlaceholder(e)) throw e;
-    res = await api.post<Record<string, unknown>>(JP_FALLBACK_PATH, {
-      title: payload.title,
-      category: payload.category,
-      image: base64Image,
-    });
-  }
+  const res = await api.post<Record<string, unknown>>(GALLERY_PATH, buildGalleryFormData(payload));
 
   const responseData = isRecord(res.data) ? res.data : {};
-  const id = responseData.id != null ? String(responseData.id) : Date.now().toString();
+  const data = isRecord(responseData.data) ? responseData.data : responseData;
+  const id = data._id != null ? String(data._id) : data.id != null ? String(data.id) : Date.now().toString();
   const returnImage =
-    typeof responseData.image === "string"
-      ? responseData.image
-      : typeof responseData.imageUrl === "string"
-        ? responseData.imageUrl
-        : base64Image
-          ? base64Image
-          : remoteUrl(payload.image);
+    typeof data.imageUrl === "string"
+      ? data.imageUrl
+      : typeof data.image === "string"
+        ? data.image
+        : payload.image;
   return {
     id,
     title: payload.title,
     category: payload.category,
-    image: toAbsoluteImageUrl(returnImage),
+    image: getImageUrl(returnImage, "gallery"),
   };
+};
+
+export const updateGalleryItem = async (
+  id: string,
+  payload: Omit<GalleryItem, "id">,
+): Promise<void> => {
+  await api.put(galleryItemPath(id), buildGalleryFormData(payload));
 };
 
 export const deleteGalleryItemApi = async (id: string): Promise<void> => {

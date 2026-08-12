@@ -31,7 +31,7 @@ const mapApiRowToEnquiry = (row: EnquiryApiRow): Enquiry => ({
   email: row.email ?? "",
   course: row.course ?? "",
   message: row.message ?? "",
-  date: row.date ? new Date(row.date).toLocaleDateString("en-GB") : "",
+  date: row.date ? new Date(row.date).toISOString() : "",
   status: (row.status as EnquiryStatus) || "New",
   type: row.type?.toLowerCase().includes("course") ? "course" : "general",
   notes: row.notes,

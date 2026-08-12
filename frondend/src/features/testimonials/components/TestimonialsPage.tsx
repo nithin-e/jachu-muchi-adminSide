@@ -6,6 +6,7 @@ import PageHeader from "@shared/components/PageHeader";
 import DeleteModal from "@shared/components/DeleteModal";
 import { Button } from "@shared/components/ui/button";
 import { getTestimonials, deleteTestimonialApi } from "../api/testimonialsApi";
+import { getImageUrl } from "@lib/imageUrl";
 
 const TestimonialsPage = () => {
   const navigate = useNavigate();
@@ -65,8 +66,8 @@ const TestimonialsPage = () => {
             <div key={t.id} className="rounded-xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {t.avatar && (
-                    <img src={t.avatar} alt={t.name} className="h-10 w-10 rounded-full object-cover" />
+                  {t.avatarUrl && (
+                    <img src={getImageUrl(t.avatarUrl, "testimonials")} alt={t.name} className="h-10 w-10 rounded-full object-cover" />
                   )}
                   <div>
                     <h3 className="font-medium text-white">{t.name}</h3>
@@ -79,13 +80,6 @@ const TestimonialsPage = () => {
                 </div>
               </div>
               <p className="text-sm italic text-white/70">"{t.content}"</p>
-              {t.rating && (
-                <div className="mt-2 flex gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} className={`text-sm ${i < (t.rating ?? 0) ? "text-yellow-400" : "text-white/20"}`}>★</span>
-                  ))}
-                </div>
-              )}
             </div>
           ))}
         </div>
