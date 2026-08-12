@@ -172,7 +172,6 @@ export class ArticleService implements IArticleService {
 
     if (!title) throwBadRequest(MESSAGES.ARTICLE.TITLE_REQUIRED);
     if (!description) throwBadRequest(MESSAGES.ARTICLE.DESCRIPTION_REQUIRED);
-    if (!category) throwBadRequest(MESSAGES.ARTICLE.CATEGORY_REQUIRED);
     if (!details) throwBadRequest(MESSAGES.ARTICLE.DETAILS_REQUIRED);
     if (!articleDate || Number.isNaN(articleDate.getTime())) {
       throwBadRequest(MESSAGES.ARTICLE.VALID_DATE_REQUIRED);
@@ -184,7 +183,7 @@ export class ArticleService implements IArticleService {
     return {
       title,
       description,
-      category,
+      ...(category ? { category } : {}),
       details,
       articleDate,
       status,

@@ -9,6 +9,10 @@ export class AlumniRepository implements IAlumniRepository {
       role: payload.role,
       company: payload.company,
       place: payload.place,
+      ...(payload.batch !== undefined ? { batch: payload.batch } : {}),
+      ...(payload.description !== undefined
+        ? { description: payload.description }
+        : {}),
       ...(payload.profileImageUrl
         ? { profileImageUrl: payload.profileImageUrl }
         : {}),
@@ -30,6 +34,12 @@ export class AlumniRepository implements IAlumniRepository {
       company: payload.company,
       place: payload.place,
     };
+    if (payload.batch !== undefined) {
+      set.batch = payload.batch;
+    }
+    if (payload.description !== undefined) {
+      set.description = payload.description;
+    }
     if (payload.profileImageUrl !== undefined) {
       set.profileImageUrl = payload.profileImageUrl;
     }

@@ -1,5 +1,5 @@
 import { IBannerDocument } from "../../models/Banner";
-import { CreateBannerInput, UpdateBannerInput } from "../../types/banner.types";
+import { CreateBannerInput, UpdateBannerInput, PublicBanner } from "../../types/banner.types";
 
 export interface IBannerService {
   createBanner(input: CreateBannerInput): Promise<IBannerDocument>;
@@ -9,5 +9,6 @@ export interface IBannerService {
   ): Promise<IBannerDocument>;
   deleteBanner(bannerId: string): Promise<void>;
   getBannerById(bannerId: string): Promise<IBannerDocument>;
+  getActiveBanners(): Promise<PublicBanner[]>;
   toggleStatus(bannerId: string): Promise<IBannerDocument>;
 }

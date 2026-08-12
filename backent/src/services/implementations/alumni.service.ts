@@ -80,6 +80,9 @@ export class AlumniService implements IAlumniService {
     const role = input.role?.trim() ?? "";
     const company = input.company?.trim() ?? "";
     const place = input.place?.trim() ?? "";
+    const batch = typeof input.batch === "string" ? input.batch.trim() : undefined;
+    const description =
+      typeof input.description === "string" ? input.description.trim() : undefined;
 
     if (!name) throwBadRequest(MESSAGES.ALUMNI.NAME_REQUIRED);
     if (!role) throwBadRequest(MESSAGES.ALUMNI.ROLE_REQUIRED);
@@ -91,6 +94,8 @@ export class AlumniService implements IAlumniService {
       role,
       company,
       place,
+      ...(batch !== undefined ? { batch } : {}),
+      ...(description !== undefined ? { description } : {}),
       ...(input.profileImageUrl?.trim()
         ? { profileImageUrl: input.profileImageUrl.trim() }
         : {}),

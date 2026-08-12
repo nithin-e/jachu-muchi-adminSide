@@ -5,6 +5,7 @@ import path from "path";
 
 import authRoutes from "./routes/admin/auth.routes";
 import uploadRoutes from "./routes/upload.routes";
+import seoRoutes from "./routes/seo.routes";
 import { corsOptions } from "./config/cors.config";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import { rateLimit } from "./middlewares/rate-limit.middleware";
@@ -27,6 +28,10 @@ class AppServer {
   }
 
   private loadMiddlewares(): void {
+
+    // 🔥 CORS FIRST — blocked origins get a 403 before reaching body parser, routes or 404
+    this.app.use(cors(corsOptions));
+    this.app.options(/.*/, cors(corsOptions));
 
     // 🔥 GLOBAL API LOGGER
     this.app.use((req, res, next) => {
@@ -59,7 +64,7 @@ class AppServer {
 
     this.app.use(rateLimit);
 
-    this.app.use(express.json({ limit: "10mb" }));
+    this.app.use(express.json({ limit: "60mb" }));
 
     this.app.use(
       express.urlencoded({
@@ -67,10 +72,6 @@ class AppServer {
         limit: "10mb",
       })
     );
-
-    this.app.use(cors(corsOptions));
-
-    this.app.options(/.*/, cors(corsOptions));
 
     this.app.use(
       "/uploads",
@@ -88,6 +89,9 @@ class AppServer {
 
     // UPLOAD ROUTES
     this.app.use("/api/upload", uploadRoutes);
+
+    // SEO ROUTES
+    this.app.use("/api/seo", seoRoutes);
 
     // DYNAMIC ROUTES
     loadAdminRoutes(this.app);

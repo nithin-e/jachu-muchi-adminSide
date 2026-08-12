@@ -2,47 +2,58 @@ import {
   CreateTestimonialInput,
   UpdateTestimonialInput,
 } from "../types/testimonial.types";
+import { TestimonialStatus } from "../models/Testimonial";
 
 export function mapBodyToCreateTestimonialInput(
   body: Record<string, unknown>,
-  profileImageUrl?: string
+  avatarUrlFromFile?: string
 ): CreateTestimonialInput {
   const name =
-    (typeof body.name === "string" && body.name) ||
-    (typeof body.studentName === "string" && body.studentName) ||
-    "";
+    (typeof body.name === "string" && body.name) || "";
 
-  const course =
-    (typeof body.course === "string" && body.course) ||
-    (typeof body.courseName === "string" && body.courseName) ||
-    "";
+  const role =
+    typeof body.role === "string" && body.role.trim()
+      ? body.role.trim()
+      : undefined;
 
-  const message =
-    (typeof body.message === "string" && body.message) ||
+  const content =
     (typeof body.content === "string" && body.content) ||
+    (typeof body.message === "string" && body.message) ||
     "";
+
+  const statusRaw =
+    typeof body.status === "string" && body.status.trim()
+      ? body.status.trim()
+      : "";
+  const status: TestimonialStatus =
+    statusRaw === "Active" || statusRaw === "Inactive" ? statusRaw : "Active";
 
   const explicitUrl =
-    typeof body.profileImageUrl === "string" ? body.profileImageUrl : undefined;
+    typeof body.avatarUrl === "string" && body.avatarUrl.trim()
+      ? body.avatarUrl.trim()
+      : typeof body.profileImageUrl === "string" && body.profileImageUrl.trim()
+        ? body.profileImageUrl.trim()
+        : undefined;
 
   return {
     name,
-    course,
-    message,
-    ...(profileImageUrl
-      ? { profileImageUrl }
-      : explicitUrl?.trim()
-        ? { profileImageUrl: explicitUrl.trim() }
+    status,
+    content,
+    ...(role ? { role } : {}),
+    ...(avatarUrlFromFile
+      ? { avatarUrl: avatarUrlFromFile }
+      : explicitUrl
+        ? { avatarUrl: explicitUrl }
         : {}),
   };
 }
 
 export function mapBodyToUpdateTestimonialInput(
   body: Record<string, unknown>,
-  profileImageUrl?: string
+  avatarUrlFromFile?: string
 ): UpdateTestimonialInput {
   return mapBodyToCreateTestimonialInput(
     body,
-    profileImageUrl
+    avatarUrlFromFile
   ) as UpdateTestimonialInput;
 }

@@ -6,6 +6,8 @@ export interface IAlumniDocument extends Document {
   company: string;
   place: string;  // New field: Place/City where alumni is working
   profileImageUrl?: string;
+  batch?: string;
+  description?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +19,8 @@ const alumniSchema = new Schema<IAlumniDocument>(
     company: { type: String, required: true, trim: true },
     place: { type: String, required: true, trim: true },
     profileImageUrl: { type: String, trim: true },
+    batch: { type: String, trim: true },
+    description: { type: String, trim: true },
   },
   { timestamps: true }
 );

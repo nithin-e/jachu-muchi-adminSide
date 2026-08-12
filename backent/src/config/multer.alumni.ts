@@ -4,6 +4,8 @@ import path from "path";
 
 const uploadRoot = path.join(process.cwd(), "uploads", "alumni");
 
+export const MAX_ALUMNI_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+
 if (!fs.existsSync(uploadRoot)) {
   fs.mkdirSync(uploadRoot, { recursive: true });
 }
@@ -24,7 +26,7 @@ const allowedExt = new Set([".png", ".jpg", ".jpeg"]);
 
 export const alumniProfileUpload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_ALUMNI_IMAGE_SIZE_BYTES },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowedMime.has(file.mimetype) || allowedExt.has(ext)) {

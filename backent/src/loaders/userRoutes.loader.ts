@@ -11,17 +11,15 @@ import articleRouter from "../routes/user/article.routes";
 import categoryRouter from "../routes/user/category.routes";
 import BranchRouter from "../routes/user/branch.routes";
 import contactEnquiryRouter from "../routes/user/contactEnquiry.routes";
-import storeRouter from "../routes/user/store.routes";
 
 export function loadUserRoutes(app: Application): void {
-  app.use("/api/stores", storeRouter);
   app.use("/api/courses", courseRoutes);
   app.use("/api/alumni", alumniRoutes);
   app.use("/api/enquiry", outreachRouter); 
   app.use("/api/enquiries", enquiryRoutes);
   app.use("/api/gallery", galleryRouter);
   app.use("/api/testimonials", testimonialRouter);
-  app.use("/api/admin/banners", bannerRouter);
+  app.use("/api/banners", bannerRouter);
   app.use("/api/articles", articleRouter);
   app.use("/api/categories", categoryRouter);
   app.use("/api/branches", BranchRouter);

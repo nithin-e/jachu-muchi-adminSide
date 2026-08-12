@@ -1,10 +1,23 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export const TESTIMONIAL_STATUS = {
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
+} as const;
+
+export type TestimonialStatus = "Active" | "Inactive";
+
+export const TESTIMONIAL_STATUS_VALUES: TestimonialStatus[] = [
+  TESTIMONIAL_STATUS.ACTIVE,
+  TESTIMONIAL_STATUS.INACTIVE,
+];
+
 export interface ITestimonialDocument extends Document {
   name: string;
-  course: string;
-  message: string;
-  profileImageUrl?: string;
+  role?: string;
+  avatarUrl?: string;
+  content: string;
+  status: TestimonialStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -12,9 +25,15 @@ export interface ITestimonialDocument extends Document {
 const testimonialSchema = new Schema<ITestimonialDocument>(
   {
     name: { type: String, required: true, trim: true },
-    course: { type: String, required: true, trim: true },
-    message: { type: String, required: true, trim: true },
-    profileImageUrl: { type: String, trim: true },
+    role: { type: String, trim: true },
+    avatarUrl: { type: String, trim: true },
+    content: { type: String, required: true, trim: true },
+    status: {
+      type: String,
+      enum: TESTIMONIAL_STATUS_VALUES,
+      default: TESTIMONIAL_STATUS.ACTIVE,
+      required: true,
+    },
   },
   { timestamps: true }
 );

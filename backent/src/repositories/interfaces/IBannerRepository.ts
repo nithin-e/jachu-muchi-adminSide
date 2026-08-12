@@ -4,6 +4,7 @@ import { CreateBannerInput, UpdateBannerInput } from "../../types/banner.types";
 export interface IBannerRepository {
   create(payload: CreateBannerInput): Promise<IBannerDocument>;
   findById(id: string): Promise<IBannerDocument | null>;
+  findActive(): Promise<IBannerDocument[]>;
   updateById(
     id: string,
     payload: UpdateBannerInput

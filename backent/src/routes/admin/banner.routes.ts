@@ -10,6 +10,11 @@ router.get("/all", bannerController.listAll.bind(bannerController));
 router.get("/", bannerController.list.bind(bannerController));
 router.get("/:id", bannerController.getById.bind(bannerController));
 router.post(
+  "/upload",
+  bannerUploadMiddleware.handle.bind(bannerUploadMiddleware),
+  bannerController.uploadImage.bind(bannerController)
+);
+router.post(
   "/",
   bannerUploadMiddleware.handle.bind(bannerUploadMiddleware),
   bannerController.create.bind(bannerController)

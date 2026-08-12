@@ -1,7 +1,11 @@
 import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
-import { ITestimonialDocument } from "../../models/Testimonial";
+import {
+  ITestimonialDocument,
+  TestimonialStatus,
+  TESTIMONIAL_STATUS,
+} from "../../models/Testimonial";
 import { ITestimonialRepository } from "../../repositories/interfaces/ITestimonialRepository";
 import {
   CreateTestimonialInput,
@@ -11,7 +15,7 @@ import { throwBadRequest, throwNotFound } from "../../utils/http-errors.helper";
 import { ITestimonialService } from "../interfaces/ITestimonialService";
 import { MESSAGES } from "../../constants/messages";
 
-function tryRemoveProfileImageFile(imageUrl?: string): void {
+function tryRemoveAvatarFile(imageUrl?: string): void {
   if (!imageUrl?.trim()) return;
   const base = "/uploads/testimonials/";
   if (!imageUrl.includes(base)) return;
@@ -64,12 +68,12 @@ export class TestimonialService implements ITestimonialService {
     }
 
     if (
-      payload.profileImageUrl !== undefined &&
-      existing.profileImageUrl &&
-      updated.profileImageUrl &&
-      updated.profileImageUrl !== existing.profileImageUrl
+      payload.avatarUrl !== undefined &&
+      existing.avatarUrl &&
+      updated.avatarUrl &&
+      updated.avatarUrl !== existing.avatarUrl
     ) {
-      tryRemoveProfileImageFile(existing.profileImageUrl);
+      tryRemoveAvatarFile(existing.avatarUrl);
     }
 
     return updated;
@@ -85,7 +89,7 @@ export class TestimonialService implements ITestimonialService {
       throwNotFound(MESSAGES.TESTIMONIAL.NOT_FOUND);
     }
 
-    tryRemoveProfileImageFile(removed.profileImageUrl);
+    tryRemoveAvatarFile(removed.avatarUrl);
   }
 
   async getTestimonialById(
@@ -107,19 +111,30 @@ export class TestimonialService implements ITestimonialService {
     input: CreateTestimonialInput | UpdateTestimonialInput
   ): CreateTestimonialInput {
     const name = input.name?.trim() ?? "";
-    const course = input.course?.trim() ?? "";
-    const message = input.message?.trim() ?? "";
+    const content = input.content?.trim() ?? "";
 
     if (!name) throwBadRequest(MESSAGES.TESTIMONIAL.NAME_REQUIRED);
-    if (!course) throwBadRequest(MESSAGES.TESTIMONIAL.COURSE_REQUIRED);
-    if (!message) throwBadRequest(MESSAGES.TESTIMONIAL.MESSAGE_REQUIRED);
+    if (!content) throwBadRequest(MESSAGES.TESTIMONIAL.CONTENT_REQUIRED);
+
+    let status: TestimonialStatus;
+    if (
+      input.status === TESTIMONIAL_STATUS.ACTIVE ||
+      input.status === TESTIMONIAL_STATUS.INACTIVE
+    ) {
+      status = input.status;
+    } else {
+      throwBadRequest(MESSAGES.TESTIMONIAL.INVALID_STATUS);
+    }
+
+    const role = input.role?.trim() || undefined;
 
     return {
       name,
-      course,
-      message,
-      ...(input.profileImageUrl?.trim()
-        ? { profileImageUrl: input.profileImageUrl.trim() }
+      content,
+      status,
+      ...(role ? { role } : {}),
+      ...(input.avatarUrl?.trim()
+        ? { avatarUrl: input.avatarUrl.trim() }
         : {}),
     };
   }

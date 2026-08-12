@@ -19,19 +19,21 @@ const storage = multer.diskStorage({
   },
 });
 
-const allowedMime = new Set(["image/png", "image/jpeg", "image/jpg"]);
-const allowedExt = new Set([".png", ".jpg", ".jpeg"]);
+const MAX_ARTICLE_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+
+const allowedMime = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
+const allowedExt = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 
 export const articleImageUpload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_ARTICLE_IMAGE_SIZE_BYTES },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowedMime.has(file.mimetype) || allowedExt.has(ext)) {
       cb(null, true);
       return;
     }
-    cb(new Error("Please upload only PNG or JPG images. Selected file is not a valid image."));
+    cb(new Error("Please upload only JPG, PNG, or WEBP images. Selected file is not a valid image."));
   },
 });
 

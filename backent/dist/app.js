@@ -9,6 +9,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const path_1 = __importDefault(require("path"));
 const auth_routes_1 = __importDefault(require("./routes/admin/auth.routes"));
 const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
+const seo_routes_1 = __importDefault(require("./routes/seo.routes"));
 const cors_config_1 = require("./config/cors.config");
 const error_middleware_1 = require("./middlewares/error.middleware");
 const rate_limit_middleware_1 = require("./middlewares/rate-limit.middleware");
@@ -24,6 +25,9 @@ class AppServer {
         this.loadErrorHandling();
     }
     loadMiddlewares() {
+        // 🔥 CORS FIRST — blocked origins get a 403 before reaching body parser, routes or 404
+        this.app.use((0, cors_1.default)(cors_config_1.corsOptions));
+        this.app.options(/.*/, (0, cors_1.default)(cors_config_1.corsOptions));
         // 🔥 GLOBAL API LOGGER
         this.app.use((req, res, next) => {
             console.log("\n====================================");
@@ -45,13 +49,11 @@ class AppServer {
             contentSecurityPolicy: false,
         }));
         this.app.use(rate_limit_middleware_1.rateLimit);
-        this.app.use(express_1.default.json({ limit: "10mb" }));
+        this.app.use(express_1.default.json({ limit: "60mb" }));
         this.app.use(express_1.default.urlencoded({
             extended: true,
             limit: "10mb",
         }));
-        this.app.use((0, cors_1.default)(cors_config_1.corsOptions));
-        this.app.options(/.*/, (0, cors_1.default)(cors_config_1.corsOptions));
         this.app.use("/uploads", express_1.default.static(path_1.default.join(process.cwd(), "uploads")));
     }
     loadRoutes() {
@@ -62,6 +64,8 @@ class AppServer {
         this.app.use("/api/auth", auth_routes_1.default);
         // UPLOAD ROUTES
         this.app.use("/api/upload", upload_routes_1.default);
+        // SEO ROUTES
+        this.app.use("/api/seo", seo_routes_1.default);
         // DYNAMIC ROUTES
         (0, adminRoutes_loader_1.loadAdminRoutes)(this.app);
         (0, userRoutes_loader_1.loadUserRoutes)(this.app);

@@ -1,13 +1,11 @@
 import { Router } from "express";
 import {
   bannerController,
-  bannerUploadMiddleware,
 } from "../../config/injections/banner.injection";
 
 const bannerRouter = Router();
 
-bannerRouter.get("/all", bannerController.listAll.bind(bannerController));
-
-
+bannerRouter.get("/", bannerController.getPublicBanners.bind(bannerController));
+bannerRouter.get("/all", bannerController.getPublicBanners.bind(bannerController));
 
 export default bannerRouter;
