@@ -1,4 +1,5 @@
 import { MessageSquareText, Sparkles, BadgeCheck, CircleX, Eye, Loader2, Trash2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,11 +15,13 @@ import {
   YAxis,
 } from "recharts";
 import PageHeader from "@shared/components/PageHeader";
+import { usePageSeo } from "@shared/hooks/usePageSeo";
 import {
   deleteEnquiry,
   getEnquiries,
 } from "@features/enquiries/api/enquiriesApi";
 import type { Enquiry, EnquiryStatus } from "@features/enquiries/types";
+import { formatEnquiryDate } from "@features/enquiries/utils";
 
 const statusClasses: Record<EnquiryStatus, string> = {
   New: "border border-blue-400/20 bg-blue-400/10 text-blue-300",
@@ -39,6 +42,7 @@ const parseEnquiryDate = (value: string) => {
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { metaTitle, metaDescription, metaKeywords } = usePageSeo("/");
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("This Week");
@@ -155,6 +159,11 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-6">
+    <Helmet>
+      <title>{metaTitle}</title>
+      {metaDescription && <meta name="description" content={metaDescription} />}
+      {metaKeywords && <meta name="keywords" content={metaKeywords} />}
+    </Helmet>
     <PageHeader
       title="Dashboard"
       description={
@@ -304,7 +313,7 @@ const DashboardPage = () => {
                   {enquiry.course}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-400">
-                  {enquiry.date}
+                  {formatEnquiryDate(enquiry.date)}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3">
                   <span
@@ -356,7 +365,7 @@ const DashboardPage = () => {
             <div className="space-y-1">
               <p className="text-sm text-gray-300">Phone: <span className="text-gray-200">{enquiry.phone}</span></p>
               <p className="text-sm text-gray-300">Course: <span className="text-gray-200">{enquiry.course}</span></p>
-              <p className="text-sm text-gray-300">Date: <span className="text-gray-200">{enquiry.date}</span></p>
+              <p className="text-sm text-gray-300">Date: <span className="text-gray-200">{formatEnquiryDate(enquiry.date)}</span></p>
             </div>
 
             <div className="flex items-center justify-between">

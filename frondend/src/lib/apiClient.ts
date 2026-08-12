@@ -8,6 +8,14 @@ const API_BASE_URL =
   "";
 
 const REQUEST_TIMEOUT_MS = 10_000;
+export const UPLOAD_TIMEOUT_MS = 60_000;
+
+type ApiRequestInit = RequestInit & { timeoutMs?: number };
+
+type ApiUploadOptions = {
+  timeoutMs?: number;
+  onUploadProgress?: (percentLoaded: number) => void;
+};
 
 type ApiRequestErrorOptions = {
   status?: number;
@@ -82,9 +90,10 @@ const parseResponseBody = async <T>(response: Response): Promise<T> => {
   }
 };
 
-const request = async <T>(path: string, init?: RequestInit): Promise<ApiResponse<T>> => {
+const request = async <T>(path: string, init: ApiRequestInit = {}): Promise<ApiResponse<T>> => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutMs = init.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const externalSignal = init?.signal;
   const onAbort = () => controller.abort();
   if (externalSignal) {
@@ -133,7 +142,7 @@ const request = async <T>(path: string, init?: RequestInit): Promise<ApiResponse
       const timedOut = !externalSignal?.aborted;
       throw new ApiRequestError(
         timedOut
-          ? `API request timed out after ${REQUEST_TIMEOUT_MS}ms`
+          ? `API request timed out after ${timeoutMs}ms`
           : "API request was aborted",
         { isTimeout: timedOut, cause: error },
       );
@@ -147,8 +156,85 @@ const request = async <T>(path: string, init?: RequestInit): Promise<ApiResponse
   }
 };
 
+const upload = <T>(
+  path: string,
+  body: FormData,
+  options: ApiUploadOptions = {}
+): Promise<ApiResponse<T>> =>
+  new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
+    const token = tryGetAuthToken();
+
+    xhr.open("POST", `${API_BASE_URL}${path}`);
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.responseType = "text";
+    xhr.timeout = timeoutMs;
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && options.onUploadProgress) {
+        options.onUploadProgress(
+          Math.round((event.loaded / event.total) * 100)
+        );
+      }
+    };
+
+    xhr.ontimeout = () => {
+      reject(
+        new ApiRequestError(`API request timed out after ${timeoutMs}ms`, {
+          isTimeout: true,
+        })
+      );
+    };
+
+    xhr.onerror = () => {
+      reject(new ApiRequestError("Network request failed"));
+    };
+
+    xhr.onabort = () => {
+      reject(new ApiRequestError("API request was aborted"));
+    };
+
+    xhr.onload = () => {
+      const text = xhr.responseText;
+      let data: T;
+      if (!text.trim()) {
+        data = {} as T;
+      } else {
+        try {
+          data = JSON.parse(text) as T;
+        } catch {
+          reject(new ApiRequestError("API response is not valid JSON"));
+          return;
+        }
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({ data });
+        return;
+      }
+
+      if (xhr.status === 401 && unauthorizedHandler) {
+        unauthorizedHandler();
+      }
+      const messageFromBody = inferBodyMessage(data);
+      const message = messageFromBody
+        ? `API request failed with status ${xhr.status}: ${messageFromBody}`
+        : `API request failed with status ${xhr.status}`;
+      reject(
+        new ApiRequestError(message, {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          responseBody: data,
+        })
+      );
+    };
+
+    xhr.send(body);
+  });
+
 export const api = {
-  get: <T>(path: string, init?: Pick<RequestInit, "signal">) =>
+  get: <T>(path: string, init?: Pick<ApiRequestInit, "signal">) =>
     request<T>(path, { method: "GET", ...init }),
   post: <T>(path: string, body: unknown) =>
     request<T>(path, {
@@ -175,4 +261,6 @@ export const api = {
           : JSON.stringify(body),
     }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  upload: <T>(path: string, body: FormData, options?: ApiUploadOptions) =>
+    upload<T>(path, body, options),
 };

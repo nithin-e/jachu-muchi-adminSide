@@ -1,97 +1,62 @@
-import { api, isApiRequestError } from "@lib/apiClient";
-import type { Testimonial } from "../types";
+import { api, UPLOAD_TIMEOUT_MS } from "@lib/apiClient";
+import type { Testimonial, TestimonialStatus } from "../types";
 
 export const TESTIMONIALS_LIST_PATH = "/api/admin/testimonials/all";
 const TESTIMONIALS_BASE_PATH = "/api/admin/testimonials";
 export const testimonialDetailPath = (id: string) => `${TESTIMONIALS_BASE_PATH}/${id}`;
 
-type TestimonialApiRow = {
-  _id: string;
-  name: string;
-  courseRef?: string;
-  course?: string;
-  avatar?: string;
-  profileImageUrl?: string;
-  testimonial?: string;
-  message?: string;
-};
+export const TESTIMONIAL_IMAGE_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
 const isRecord = (x: unknown): x is Record<string, unknown> =>
   typeof x === "object" && x !== null;
 
-const isTestimonialApiRow = (x: unknown): x is TestimonialApiRow =>
-  typeof x === "object" &&
-  x !== null &&
-  typeof (x as TestimonialApiRow)._id === "string" &&
-  typeof (x as TestimonialApiRow).name === "string";
+const unwrapResponseData = (response: unknown): unknown => {
+  if (isRecord(response) && "data" in response) return response.data;
+  return response;
+};
 
-const isTestimonialRow = (x: unknown): x is Testimonial =>
-  typeof x === "object" &&
-  x !== null &&
-  typeof (x as Testimonial).id === "string" &&
-  "message" in x;
-
-const mapApiRowToTestimonial = (row: TestimonialApiRow): Testimonial => ({
-  id: row._id,
-  name: row.name || "Student",
-  message: row.testimonial ?? row.message ?? "",
-  course: row.courseRef ?? row.course ?? "",
-  image: row.profileImageUrl ?? "",
-});
+const toStatus = (raw: unknown): TestimonialStatus =>
+  raw === "Active" || raw === "Inactive" ? (raw as TestimonialStatus) : "Active";
 
 const rowToTestimonial = (raw: Record<string, unknown>): Testimonial => ({
   id: String(raw.id ?? raw._id ?? ""),
   name: String(raw.name ?? ""),
-  message: String(raw.message ?? raw.testimonial ?? raw.body ?? ""),
-  course: String(raw.course ?? raw.courseRef ?? ""),
-  image:
-    typeof raw.profileImageUrl === "string"
-      ? raw.profileImageUrl
-      : typeof raw.image === "string"
-        ? raw.image
-        : typeof raw.avatar === "string" && /^https?:\/\//i.test(raw.avatar)
-          ? raw.avatar
-          : "",
+  role: typeof raw.role === "string" ? raw.role : undefined,
+  avatarUrl: String(raw.avatarUrl ?? raw.profileImageUrl ?? ""),
+  content: String(raw.content ?? raw.message ?? ""),
+  status: toStatus(raw.status),
 });
 
 export const getTestimonials = async (): Promise<Testimonial[]> => {
   const res = await api.get<unknown>(TESTIMONIALS_LIST_PATH);
-  const response = res.data;
-  const list = (response as any)?.data ?? response;
-  if (!Array.isArray(list) || list.length === 0) return [];
-  const first = list[0];
-  if (isTestimonialRow(first)) return list as Testimonial[];
-  if (isTestimonialApiRow(first)) {
-    return (list as TestimonialApiRow[]).map(mapApiRowToTestimonial);
-  }
-  return list
-    .filter((item): item is Record<string, unknown> => isRecord(item))
-    .map((item) => rowToTestimonial(item));
+  const list = unwrapResponseData(res.data);
+  if (!Array.isArray(list)) return [];
+  return list.filter(isRecord).map(rowToTestimonial);
 };
 
 export const getTestimonialByIdApi = async (id: string): Promise<Testimonial | null> => {
   try {
     const res = await api.get<unknown>(`${TESTIMONIALS_BASE_PATH}/${id}`);
-    const response = res.data;
-    const row = (response as any)?.data ?? response;
+    const row = unwrapResponseData(res.data);
     if (!row || typeof row !== "object") return null;
-    if (isTestimonialRow(row)) return row;
-    if (isTestimonialApiRow(row)) return mapApiRowToTestimonial(row);
     return rowToTestimonial(row as Record<string, unknown>);
   } catch {
     return null;
   }
 };
 
+const buildTestimonialPayload = (payload: Omit<Testimonial, "id">) => ({
+  name: payload.name,
+  content: payload.content,
+  status: payload.status,
+  ...(payload.role ? { role: payload.role } : {}),
+  ...(payload.avatarUrl ? { avatarUrl: payload.avatarUrl } : {}),
+});
+
 export const createTestimonial = async (payload: Omit<Testimonial, "id">): Promise<Testimonial> => {
-  const res = await api.post<Record<string, unknown>>(TESTIMONIALS_BASE_PATH, {
-    name: payload.name,
-    course: payload.course,
-    message: payload.message,
-    ...(payload.image ? { profileImageUrl: payload.image } : {}),
-  });
+  const res = await api.post<Record<string, unknown>>(TESTIMONIALS_BASE_PATH, buildTestimonialPayload(payload));
   const response = res.data;
-  const data = (response as any)?.data ?? response;
+  const data = unwrapResponseData(response);
   const id =
     (isRecord(data) && data._id != null)
       ? String(data._id)
@@ -102,12 +67,32 @@ export const createTestimonial = async (payload: Omit<Testimonial, "id">): Promi
 };
 
 export const updateTestimonialApi = async (id: string, payload: Omit<Testimonial, "id">): Promise<void> => {
-  await api.put(`${TESTIMONIALS_BASE_PATH}/${id}`, {
-    name: payload.name,
-    course: payload.course,
-    message: payload.message,
-    ...(payload.image ? { profileImageUrl: payload.image } : {}),
+  await api.put(`${TESTIMONIALS_BASE_PATH}/${id}`, buildTestimonialPayload(payload));
+};
+
+type UploadResponse = {
+  data?: {
+    filePath?: string;
+  };
+};
+
+export const uploadTestimonialImage = async (
+  file: File,
+  onProgress?: (percentLoaded: number) => void,
+): Promise<string> => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await api.upload<UploadResponse>("/api/upload", formData, {
+    timeoutMs: UPLOAD_TIMEOUT_MS,
+    onUploadProgress: onProgress,
   });
+
+  const filePath = res.data?.data?.filePath;
+  if (!filePath) {
+    throw new Error("Upload failed: no file URL returned by the server.");
+  }
+  return filePath;
 };
 
 export const deleteTestimonialApi = async (id: string): Promise<void> => {

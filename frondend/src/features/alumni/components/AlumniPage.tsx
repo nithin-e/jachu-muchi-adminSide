@@ -6,6 +6,7 @@ import PageHeader from "@shared/components/PageHeader";
 import DeleteModal from "@shared/components/DeleteModal";
 import { Button } from "@shared/components/ui/button";
 import { getAlumniList, deleteAlumniApi } from "../api/alumniApi";
+import { getImageUrl } from "@lib/imageUrl";
 
 const AlumniPage = () => {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ const AlumniPage = () => {
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {a.image && (
-                    <img src={a.image} alt={a.name} className="h-12 w-12 rounded-full object-cover" />
+                    <img src={getImageUrl(a.image, "alumni")} alt={a.name} className="h-12 w-12 rounded-full object-cover" />
                   )}
                   <div>
                     <h3 className="font-medium text-white">{a.name}</h3>

@@ -1,4 +1,5 @@
 import { api } from "@lib/apiClient";
+import { getImageUrl } from "@lib/imageUrl";
 import type { CourseListItem, CoursePayload } from "../types";
 
 export const COURSES_LIST_PATH = "/api/admin/courses/all";
@@ -26,21 +27,6 @@ const isRecord = (x: unknown): x is Record<string, unknown> =>
 const isCourseListApiRow = (x: unknown): x is CourseListApiRow =>
   isRecord(x) && typeof x._id === "string" && (typeof x.name === "string" || typeof x.title === "string");
 
-const getApiBaseUrl = (): string => {
-  if (typeof import.meta === "undefined") return "http://localhost:5001";
-  return import.meta.env?.VITE_API_URL || "http://localhost:5001";
-};
-
-const toAbsoluteImageUrl = (imageUrl?: string): string => {
-  if (!imageUrl) return "";
-  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
-  const apiBase = getApiBaseUrl().replace(/\/api$/, "");
-  const result = imageUrl.startsWith("/uploads")
-    ? `${apiBase}${imageUrl}`
-    : `${apiBase}/uploads/courses/${imageUrl}`;
-  return result;
-};
-
 const mapListRowToUi = (item: CourseListApiRow): CourseListItem => ({
   id: item._id,
   courseName: item.name || item.title || "Untitled Course",
@@ -52,7 +38,7 @@ const mapListRowToUi = (item: CourseListApiRow): CourseListItem => ({
     item.status === "Active" || item.status === true
       ? "Active"
       : "Inactive",
-  image: toAbsoluteImageUrl(item.imageUrl),
+  image: getImageUrl(item.imageUrl, "courses"),
   priorityOrder: (item as any).priorityOrder ?? null,
 });
 

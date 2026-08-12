@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Package,
   FolderTree,
-  ShoppingCart,
   GitBranch,
   Images,
   ImageUp,
@@ -15,6 +14,7 @@ import {
   GraduationCap,
   Users,
   Settings,
+  FileSearch,
   ChevronLeft,
   ChevronRight,
   Glasses,
@@ -42,12 +42,12 @@ const navSections = [
   {
     label: "Operations",
     items: [
-      { label: "Stores", icon: ShoppingCart, href: "/stores" },
       { label: "Branches", icon: GitBranch, href: "/branches" },
       { label: "Gallery", icon: Images, href: "/gallery" },
       { label: "Banners", icon: ImageUp, href: "/banners" },
-      { label: "Users", icon: Users, href: "/users" },
-      { label: "Settings", icon: Settings, href: "/settings" },
+      { label: "SEO", icon: FileSearch, href: "/seo" },
+      // { label: "Users", icon: Users, href: "/users" },
+      // { label: "Settings", icon: Settings, href: "/settings" },
     ],
   },
 ];
@@ -94,7 +94,7 @@ const AdminSidebar = ({ collapsed, onToggle, mobile = false }: AdminSidebarProps
         </button>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto px-2 py-3">
+      <nav className="hide-scrollbar flex-1 space-y-4 overflow-y-auto px-2 py-3">
         {navSections.map((section) => (
           <div key={section.label}>
             {!collapsed && (

@@ -96,6 +96,13 @@
 }
 
 @layer utilities {
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }

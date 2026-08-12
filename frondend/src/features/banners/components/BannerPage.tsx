@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Loader2, Trash2 } from "lucide-react";
+import { Plus, Pencil, Loader2, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import type { Banner } from "../types";
 import PageHeader from "@shared/components/PageHeader";
 import DeleteModal from "@shared/components/DeleteModal";
 import { Button } from "@shared/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/components/ui/select";
-import { getBanners, deleteBannerApi } from "../api/bannersApi";
+import { getBanners, deleteBannerApi, updateBannerApi } from "../api/bannersApi";
+import { getImageUrl } from "@lib/imageUrl";
 
 const BannerPage = () => {
   const navigate = useNavigate();
@@ -30,7 +31,10 @@ const BannerPage = () => {
     void load();
   }, []);
 
-  const filtered = filter === "all" ? banners : banners.filter((b) => b.active === (filter === "active"));
+  const filtered =
+    filter === "all"
+      ? banners
+      : banners.filter((b) => b.status === (filter === "active" ? "Active" : "Inactive"));
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -38,6 +42,33 @@ const BannerPage = () => {
     setDeleteId(null);
     try {
       await deleteBannerApi(deleteId);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleReorder = async (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= banners.length) return;
+
+    const current = banners[index];
+    const next = banners[target];
+    const currentOrder = current.order;
+    const nextOrder = next.order;
+
+    setBanners((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], order: nextOrder };
+      copy[target] = { ...copy[target], order: currentOrder };
+      return copy;
+    });
+
+    try {
+      await Promise.all([
+        updateBannerApi(current.id, { ...current, order: nextOrder }),
+        updateBannerApi(next.id, { ...next, order: currentOrder }),
+      ]);
+      await load();
     } catch (e) {
       console.error(e);
     }
@@ -75,26 +106,35 @@ const BannerPage = () => {
         <div className="p-8 text-center text-sm text-white/50">No banners found.</div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((banner) => (
+          {filtered.map((banner, index) => (
             <div key={banner.id} className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-lg backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
               <div className="aspect-[16/7] w-full overflow-hidden">
                 <img
-                  src={banner.image}
-                  alt={banner.title}
+                  src={getImageUrl(banner.image, "banners")}
+                  alt={banner.heading}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>
               <div className="p-4">
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="font-medium text-white">{banner.title}</h3>
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${banner.active ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
-                    {banner.active ? "Active" : "Inactive"}
+                  <h3 className="font-medium text-white">{banner.heading}</h3>
+                  <span className={`rounded-full px-2 py-0.5 text-xs ${banner.status === "Active" ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
+                    {banner.status}
                   </span>
                 </div>
-                {banner.subtitle && <p className="text-sm text-white/60">{banner.subtitle}</p>}
-                <div className="mt-3 flex justify-end gap-1">
-                  <button type="button" onClick={() => navigate(`/banners/${banner.id}`)} className="rounded-lg p-2 text-blue-400 transition-all duration-200 hover:bg-white/10"><Pencil className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => setDeleteId(banner.id)} className="rounded-lg p-2 text-red-400 transition-all duration-200 hover:bg-white/10"><Trash2 className="h-4 w-4" /></button>
+                {banner.subtext && <p className="text-sm text-white/60">{banner.subtext}</p>}
+                <div className="mt-3 flex items-center justify-between gap-1">
+                  <span className="rounded-md bg-white/10 px-2 py-0.5 text-xs text-white/70">Order: {banner.order}</span>
+                  <div className="flex items-center gap-1">
+                    <button type="button" disabled={index === 0} onClick={() => void handleReorder(index, -1)} className="rounded-lg p-2 text-white/70 transition-all duration-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Move up">
+                      <ChevronUp className="h-4 w-4" />
+                    </button>
+                    <button type="button" disabled={index === filtered.length - 1} onClick={() => void handleReorder(index, 1)} className="rounded-lg p-2 text-white/70 transition-all duration-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Move down">
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    <button type="button" onClick={() => navigate(`/banners/edit/${banner.id}`)} className="rounded-lg p-2 text-blue-400 transition-all duration-200 hover:bg-white/10"><Pencil className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => setDeleteId(banner.id)} className="rounded-lg p-2 text-red-400 transition-all duration-200 hover:bg-white/10"><Trash2 className="h-4 w-4" /></button>
+                  </div>
                 </div>
               </div>
             </div>

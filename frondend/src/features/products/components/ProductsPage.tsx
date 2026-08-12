@@ -16,6 +16,7 @@ import {
   PaginationPrevious,
 } from "@shared/components/ui/pagination";
 import { deleteCourse, getCourses, setCoursePriority } from "../api/productsApi";
+import { getImageUrl } from "@lib/imageUrl";
 import type { CourseListItem } from "../types";
 
 const CARD_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect fill='%231e293b' width='400' height='200'/%3E%3Ctext x='50%25' y='50%25' fill='%2364748b' font-family='sans-serif' font-size='14' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
@@ -50,7 +51,7 @@ const CourseCard = memo(function CourseCard({ course, onEdit, onRequestDelete, o
       ) : null}
       <div className="h-44 w-full overflow-hidden bg-slate-800">
         <img
-          src={course.image || CARD_FALLBACK}
+          src={getImageUrl(course.image, "courses") || CARD_FALLBACK}
           alt=""
           loading="lazy"
           decoding="async"

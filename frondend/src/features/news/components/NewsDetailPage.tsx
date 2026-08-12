@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import type { NewsItem } from "../types";
 import { getNewsById } from "../api/newsApi";
+import { getImageUrl } from "@lib/imageUrl";
 
 const NewsDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,15 +48,13 @@ const NewsDetailPage = () => {
       <article className="rounded-xl border border-white/10 bg-white/5 p-6 shadow-lg backdrop-blur-xl">
         <h1 className="mb-2 text-2xl font-bold text-white">{article.title}</h1>
         <div className="mb-4 flex items-center gap-3 text-sm text-white/40">
-          <span>By {article.author}</span>
-          <span>•</span>
-          <span>{article.date}</span>
+          <span>{article.articleDate}</span>
         </div>
-        {article.image && (
-          <img src={article.image} alt={article.title} className="mb-4 w-full rounded-lg object-cover" />
+        {article.imageUrl && (
+          <img src={getImageUrl(article.imageUrl, "articles")} alt={article.title} className="mb-4 w-full rounded-lg object-cover" />
         )}
         <div className="prose prose-invert max-w-none text-white/80">
-          <p>{article.content}</p>
+          <p>{article.details}</p>
         </div>
       </article>
     </div>

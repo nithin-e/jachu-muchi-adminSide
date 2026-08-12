@@ -1,43 +1,14 @@
-import { api } from "@lib/apiClient";
+import { api, UPLOAD_TIMEOUT_MS } from "@lib/apiClient";
+import { getImageUrl } from "@lib/imageUrl";
 import type { BannerItem, BannerStatus } from "../types";
 
 export const BANNERS_LIST_PATH = "/api/admin/banners";
 export const bannerDetailPath = (id: string) => `/api/admin/banners/${id}`;
 
-const getApiBaseUrl = (): string => {
-  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  return "";
-};
+export const BANNER_IMAGE_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 
-const toAbsoluteImageUrl = (imageUrl: string): string => {
-  if (!imageUrl) return "";
-  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
-  if (/^data:/.test(imageUrl)) return imageUrl;
-  if (/^blob:/.test(imageUrl)) return imageUrl;
-
-  const apiBase = getApiBaseUrl();
-
-  return imageUrl.startsWith("/uploads")
-    ? `${apiBase}${imageUrl}`
-    : `${apiBase}/uploads/banners/${imageUrl}`;
-};
-
-type JsonPlaceholderPhoto = {
-  id: number;
-  albumId: number;
-  title: string;
-  url: string;
-  thumbnailUrl?: string;
-};
-
-const isJpPhoto = (x: unknown): x is JsonPlaceholderPhoto =>
-  typeof x === "object" &&
-  x !== null &&
-  typeof (x as JsonPlaceholderPhoto).id === "number" &&
-  typeof (x as JsonPlaceholderPhoto).url === "string" &&
-  "title" in x;
+const PRIMARY_BUTTON_LINK = "/courses";
+const SECONDARY_BUTTON_LINK = "";
 
 const isBannerRow = (x: unknown): x is BannerItem =>
   typeof x === "object" &&
@@ -45,20 +16,22 @@ const isBannerRow = (x: unknown): x is BannerItem =>
   typeof (x as BannerItem).id === "string" &&
   typeof (x as BannerItem).image === "string";
 
-const mapPhotoToBanner = (p: JsonPlaceholderPhoto): BannerItem => ({
-  id: String(p.id),
-  title: p.title || `Banner ${p.id}`,
-  image: toAbsoluteImageUrl(p.url),
-  status: p.id % 2 === 0 ? "Active" : "Inactive",
-});
+const toStatus = (raw: unknown): BannerStatus =>
+  raw === "Active" || raw === "Inactive" ? (raw as BannerStatus) : "Active";
 
 const rowToBanner = (raw: Record<string, unknown>): BannerItem => {
   const rawUrl = String(raw.imageUrl ?? raw.image ?? raw.url ?? "");
+  const heading = String(raw.heading ?? "");
   return {
     id: String(raw._id ?? raw.id),
-    title: String(raw.title ?? ""),
-    image: toAbsoluteImageUrl(rawUrl),
-    status: raw.status === "Active" || raw.status === "Inactive" ? (raw.status as "Active" | "Inactive") : "Active",
+    heading,
+    highlightedText: String(raw.highlightedText ?? ""),
+    subtext: String(raw.subtext ?? ""),
+    primaryButtonText: String(raw.primaryButtonText ?? ""),
+    secondaryButtonText: String(raw.secondaryButtonText ?? ""),
+    order: Number(raw.order ?? 0),
+    status: toStatus(raw.status),
+    image: getImageUrl(rawUrl, "banners"),
   };
 };
 
@@ -79,25 +52,32 @@ const imageToBase64 = async (image: string): Promise<string> => {
   return blobToDataUrl(blob);
 };
 
-export const getBanners = async (): Promise<BannerItem[]> => {
-  const res = await api.get<unknown>(`${BANNERS_LIST_PATH}/all?_limit=30`);
+type BannersListResponse = {
+  data?: unknown;
+};
 
-  const data = (res.data as any)?.data;
+export const getBanners = async (): Promise<BannerItem[]> => {
+  const res = await api.get<BannersListResponse>(`${BANNERS_LIST_PATH}/all?_limit=30`);
+
+  const data = res.data?.data;
 
   if (!Array.isArray(data) || data.length === 0) return [];
 
-  return data.map((item: any) =>
-    rowToBanner(item as Record<string, unknown>)
-  );
+  return (data as unknown[])
+    .map((item) => rowToBanner(item as Record<string, unknown>))
+    .sort((a, b) => a.order - b.order);
 };
 
 export const getBannerById = async (id: string): Promise<BannerItem | null> => {
   try {
     const res = await api.get<unknown>(bannerDetailPath(id));
-    const row = res.data;
+    const body = res.data;
+    const row =
+      body && typeof body === "object" && "data" in body
+        ? (body as Record<string, unknown>).data
+        : body;
     if (row && typeof row === "object") {
       if (isBannerRow(row)) return row;
-      if (isJpPhoto(row)) return mapPhotoToBanner(row);
       return rowToBanner(row as Record<string, unknown>);
     }
     return null;
@@ -109,24 +89,47 @@ export const getBannerById = async (id: string): Promise<BannerItem | null> => {
 export const createBanner = async (payload: Omit<BannerItem, "id">): Promise<BannerItem> => {
   const base64Image = await imageToBase64(payload.image);
   const res = await api.post<Record<string, unknown>>(BANNERS_LIST_PATH, {
-    title: payload.title,
+    heading: payload.heading,
+    highlightedText: payload.highlightedText,
+    subtext: payload.subtext,
+    primaryButtonText: payload.primaryButtonText,
+    primaryButtonLink: PRIMARY_BUTTON_LINK,
+    secondaryButtonText: payload.secondaryButtonText,
+    secondaryButtonLink: SECONDARY_BUTTON_LINK,
+    order: payload.order,
     image: base64Image,
     status: payload.status,
   });
-  const responseData = (res.data as any)?.data ?? res.data;
+  const responseData =
+    typeof (res.data as Record<string, unknown> | undefined)?.data === "object" &&
+    (res.data as Record<string, unknown> | undefined)?.data !== null
+      ? (res.data as Record<string, unknown>).data as Record<string, unknown>
+      : (res.data as Record<string, unknown>);
   const id = responseData._id != null ? String(responseData._id) : responseData.id != null ? String(responseData.id) : Date.now().toString();
   return {
     id,
-    title: payload.title,
-    image: typeof responseData.imageUrl === "string" ? toAbsoluteImageUrl(responseData.imageUrl) : payload.image,
+    heading: payload.heading,
+    highlightedText: payload.highlightedText,
+    subtext: payload.subtext,
+    primaryButtonText: payload.primaryButtonText,
+    secondaryButtonText: payload.secondaryButtonText,
+    order: payload.order,
     status: payload.status,
+    image: typeof responseData.imageUrl === "string" ? getImageUrl(responseData.imageUrl, "banners") : payload.image,
   };
 };
 
 export const updateBannerApi = async (id: string, payload: Omit<BannerItem, "id">): Promise<void> => {
   const base64Image = await imageToBase64(payload.image);
   await api.put(bannerDetailPath(id), {
-    title: payload.title,
+    heading: payload.heading,
+    highlightedText: payload.highlightedText,
+    subtext: payload.subtext,
+    primaryButtonText: payload.primaryButtonText,
+    primaryButtonLink: PRIMARY_BUTTON_LINK,
+    secondaryButtonText: payload.secondaryButtonText,
+    secondaryButtonLink: SECONDARY_BUTTON_LINK,
+    order: payload.order,
     image: base64Image,
     status: payload.status,
   });
@@ -136,11 +139,28 @@ export const deleteBannerApi = async (id: string): Promise<void> => {
   await api.delete(bannerDetailPath(id));
 };
 
-export const toggleBannerStatusApi = async (
-  id: string,
-  current: BannerStatus,
-): Promise<BannerStatus> => {
-  const next: BannerStatus = current === "Active" ? "Inactive" : "Active";
-  await api.patch(bannerDetailPath(id), { status: next });
-  return next;
+type UploadResponse = {
+  data?: {
+    filePath?: string;
+  };
+};
+
+export const uploadBannerImage = async (
+  file: File,
+  onProgress?: (percentLoaded: number) => void,
+): Promise<string> => {
+  const formData = new FormData();
+  formData.append("bannerImage", file);
+
+  const res = await api.upload<UploadResponse>("/api/admin/banners/upload", formData, {
+    timeoutMs: UPLOAD_TIMEOUT_MS,
+    onUploadProgress: onProgress,
+  });
+
+  const filePath = res.data?.data?.filePath;
+  if (!filePath) {
+    throw new Error("Upload failed: no file URL returned by the server.");
+  }
+
+  return getImageUrl(filePath, "banners");
 };

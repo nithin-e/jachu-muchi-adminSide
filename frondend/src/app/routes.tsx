@@ -7,9 +7,6 @@ import DashboardPage from "@features/dashboard/components/DashboardPage";
 import ProductsPage from "@features/products/components/ProductsPage";
 import CourseFormPage from "@features/products/components/CourseFormPage";
 import CategoriesPage from "@features/categories/components/CategoriesPage";
-import OrdersPage from "@features/orders/components/OrdersPage";
-import StorePage from "@features/stores/components/StorePage";
-import StoreFormPage from "@features/stores/components/StoreFormPage";
 import UsersPage from "@features/users/components/UsersPage";
 import NewsPage from "@features/news/components/NewsPage";
 import NewsFormPage from "@features/news/components/NewsFormPage";
@@ -19,6 +16,7 @@ import EnquiryDetailPage from "@features/enquiries/components/EnquiryDetailPage"
 import BranchesPage from "@features/branches/components/BranchesPage";
 import BranchFormPage from "@features/branches/components/BranchFormPage";
 import GalleryPage from "@features/gallery/components/GalleryPage";
+import GalleryFormPage from "@features/gallery/components/GalleryFormPage";
 import BannerPage from "@features/banners/components/BannerPage";
 import EditBannerPage from "@features/banners/components/EditBannerPage";
 import TestimonialsPage from "@features/testimonials/components/TestimonialsPage";
@@ -26,6 +24,7 @@ import TestimonialFormPage from "@features/testimonials/components/TestimonialFo
 import AlumniPage from "@features/alumni/components/AlumniPage";
 import AlumniFormPage from "@features/alumni/components/AlumniFormPage";
 import SettingsPage from "@features/settings/components/SettingsPage";
+import SeoPage from "@features/seo/components/SeoPage";
 import NotFound from "@shared/components/NotFound";
 
 export const AppRoutes = (
@@ -38,10 +37,7 @@ export const AppRoutes = (
       <Route path="courses/new" element={<CourseFormPage />} />
       <Route path="courses/edit/:id" element={<CourseFormPage />} />
       <Route path="categories" element={<CategoriesPage />} />
-      <Route path="orders" element={<OrdersPage />} />
-      <Route path="stores" element={<StorePage />} />
-      <Route path="stores/new" element={<StoreFormPage />} />
-      <Route path="stores/edit/:id" element={<StoreFormPage />} />
+     
       <Route path="users" element={<UsersPage />} />
       <Route path="news" element={<NewsPage />} />
       <Route path="news/new" element={<NewsFormPage />} />
@@ -53,14 +49,18 @@ export const AppRoutes = (
       <Route path="branches/new" element={<BranchFormPage />} />
       <Route path="branches/edit/:id" element={<BranchFormPage />} />
       <Route path="gallery" element={<GalleryPage />} />
+      <Route path="gallery/new" element={<GalleryFormPage />} />
+      <Route path="gallery/edit/:id" element={<GalleryFormPage />} />
       <Route path="banners" element={<BannerPage />} />
+      <Route path="banners/new" element={<EditBannerPage />} />
       <Route path="banners/edit/:id" element={<EditBannerPage />} />
       <Route path="testimonials" element={<TestimonialsPage />} />
-      <Route path="testimonials/add" element={<TestimonialFormPage />} />
-      <Route path="testimonials/edit/:id" element={<TestimonialFormPage />} />
+      <Route path="testimonials/new" element={<TestimonialFormPage />} />
+      <Route path="testimonials/:id/edit" element={<TestimonialFormPage />} />
       <Route path="alumni" element={<AlumniPage />} />
-      <Route path="alumni/add" element={<AlumniFormPage />} />
-      <Route path="alumni/edit/:id" element={<AlumniFormPage />} />
+      <Route path="alumni/new" element={<AlumniFormPage />} />
+      <Route path="alumni/:id/edit" element={<AlumniFormPage />} />
+      <Route path="seo" element={<SeoPage />} />
       <Route path="settings" element={<SettingsPage />} />
     </Route>
     <Route path="*" element={<NotFound />} />

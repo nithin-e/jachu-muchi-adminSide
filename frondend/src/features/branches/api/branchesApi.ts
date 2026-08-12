@@ -18,9 +18,9 @@ type BranchApiRow = {
 const isBranchRow = (x: unknown): x is Branch =>
   typeof x === "object" &&
   x !== null &&
-  "phones" in x &&
-  Array.isArray((x as Branch).phones) &&
-  typeof (x as Branch).id === "string";
+  typeof (x as Branch).id === "string" &&
+  Array.isArray((x as Branch).phoneNumbers) &&
+  typeof (x as Branch).name === "string";
 
 const isRecord = (x: unknown): x is Record<string, unknown> =>
   typeof x === "object" && x !== null;
@@ -37,34 +37,39 @@ const normalizeStatus = (raw: unknown): BranchStatus =>
 const mapApiRowToBranch = (row: BranchApiRow): Branch => ({
   id: row._id,
   name: row.name,
-  phones: Array.isArray(row.phoneNumbers)
+  location: typeof row.location === "string" ? row.location : "",
+  phoneNumbers: Array.isArray(row.phoneNumbers)
     ? row.phoneNumbers.filter((p): p is string => typeof p === "string")
     : [],
-  email: typeof row.email === "string" ? row.email : "",
-  location: typeof row.location === "string" ? row.location : "",
   mapUrl: typeof row.mapUrl === "string" ? row.mapUrl : "",
+  email: typeof row.email === "string" ? row.email : "",
   status: normalizeStatus(row.status),
 });
 
 const rowToBranch = (raw: Record<string, unknown>): Branch => {
-  const id = raw.id != null ? String(raw.id) : "";
-  const phones =
-    Array.isArray(raw.phones) && raw.phones.every((p) => typeof p === "string")
-      ? (raw.phones as string[])
-      : Array.isArray(raw.phoneNumbers) && raw.phoneNumbers.every((p) => typeof p === "string")
-        ? (raw.phoneNumbers as string[])
-      : typeof raw.phone === "string" && raw.phone.trim()
-        ? raw.phone.split(/\s*,\s*|\s*;\s*/).filter(Boolean)
-        : [];
+  const phoneNumbers =
+    Array.isArray(raw.phoneNumbers) &&
+    raw.phoneNumbers.every((p) => typeof p === "string")
+      ? (raw.phoneNumbers as string[])
+      : Array.isArray(raw.phones) && raw.phones.every((p) => typeof p === "string")
+        ? (raw.phones as string[])
+        : typeof raw.phone === "string" && raw.phone.trim()
+          ? raw.phone.split(/\s*,\s*|\s*;\s*/).filter(Boolean)
+          : [];
   const status =
     raw.status === "Active" || raw.status === "Inactive" ? raw.status : "Active";
   return {
-    id,
+    id:
+      raw.id != null
+        ? String(raw.id)
+        : raw._id != null
+          ? String(raw._id)
+          : "",
     name: String(raw.name ?? ""),
-    phones,
-    email: String(raw.email ?? ""),
     location: String(raw.location ?? ""),
+    phoneNumbers,
     mapUrl: String(raw.mapUrl ?? ""),
+    email: String(raw.email ?? ""),
     status,
   };
 };
@@ -101,7 +106,7 @@ export const getBranchById = async (id: string): Promise<Branch | null> => {
 const branchToApiBody = (payload: Omit<Branch, "id">) => ({
   name: payload.name,
   location: payload.location,
-  phoneNumbers: payload.phones,
+  phoneNumbers: payload.phoneNumbers,
   mapUrl: payload.mapUrl,
   email: payload.email,
   status: payload.status,

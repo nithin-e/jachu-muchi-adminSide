@@ -38,9 +38,9 @@ export const MOCK_ORDERS: Order[] = [
 ];
 
 export const MOCK_NEWS: NewsItem[] = [
-  { id: "1", title: "New Summer Collection Launch", description: "Introducing our vibrant summer collection with UV400 protection and lightweight frames.", image: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=400&h=200&fit=crop", date: "2024-01-15", status: "Published" },
-  { id: "2", title: "Blue Light Awareness Week", description: "Learn about the importance of blue light protection in our digital age.", image: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=200&fit=crop", date: "2024-01-10", status: "Draft" },
-  { id: "3", title: "Store Expansion in Bangalore", description: "We are opening 5 new stores across Bangalore this quarter.", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=200&fit=crop", date: "2024-01-05", status: "Published" },
+  { id: "1", title: "New Summer Collection Launch", description: "Introducing our vibrant summer collection with UV400 protection and lightweight frames.", details: "Introducing our vibrant summer collection with UV400 protection and lightweight frames.", articleDate: "2024-01-15", status: "Published", imageUrl: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=400&h=200&fit=crop" },
+  { id: "2", title: "Blue Light Awareness Week", description: "Learn about the importance of blue light protection in our digital age.", details: "Learn about the importance of blue light protection in our digital age.", articleDate: "2024-01-10", status: "Draft", imageUrl: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=200&fit=crop" },
+  { id: "3", title: "Store Expansion in Bangalore", description: "We are opening 5 new stores across Bangalore this quarter.", details: "We are opening 5 new stores across Bangalore this quarter.", articleDate: "2024-01-05", status: "Published", imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=200&fit=crop" },
 ];
 
 export const MOCK_USERS: User[] = [

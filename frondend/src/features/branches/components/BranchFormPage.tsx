@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import type { Branch } from "../types";
+import type { Branch, BranchStatus } from "../types";
 import PageHeader from "@shared/components/PageHeader";
 import { Button } from "@shared/components/ui/button";
 import { Input } from "@shared/components/ui/input";
 import { Label } from "@shared/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/components/ui/select";
 import { getBranchById, createBranch, updateBranchApi } from "../api/branchesApi";
 
 const BranchFormPage = () => {
@@ -17,16 +18,11 @@ const BranchFormPage = () => {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<Omit<Branch, "id">>({
     name: "",
-    phones: [],
+    phoneNumbers: [],
     email: "",
     location: "",
     mapUrl: "",
     status: "Active",
-    address: "",
-    city: "",
-    state: "",
-    zip: "",
-    phone: "",
   });
 
   useEffect(() => {
@@ -37,16 +33,11 @@ const BranchFormPage = () => {
         const branch = await getBranchById(id);
         setForm({
           name: branch.name,
-          phones: branch.phones,
+          phoneNumbers: branch.phoneNumbers,
           email: branch.email,
           location: branch.location,
           mapUrl: branch.mapUrl,
           status: branch.status,
-          address: branch.address || "",
-          city: branch.city || "",
-          state: branch.state || "",
-          zip: branch.zip || "",
-          phone: branch.phone || "",
         });
       } catch (e) {
         console.error(e);
@@ -57,8 +48,19 @@ const BranchFormPage = () => {
     void load();
   }, [id]);
 
-  const handleChange = (field: keyof typeof form, value: string) => {
+  const handleChange = <K extends keyof Omit<Branch, "id">>(
+    field: K,
+    value: Omit<Branch, "id">[K],
+  ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const phoneNumbers = value
+      .split(/[,\n]/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    setForm((prev) => ({ ...prev, phoneNumbers }));
   };
 
   const handleSave = async () => {
@@ -99,12 +101,20 @@ const BranchFormPage = () => {
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 shadow-lg backdrop-blur-xl">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5"><Label>Branch Name</Label><Input value={form.name} onChange={(e) => handleChange("name", e.target.value)} /></div>
-          <div className="flex flex-col gap-1.5"><Label>Phone</Label><Input value={form.phone} onChange={(e) => handleChange("phone", e.target.value)} /></div>
+          <div className="flex flex-col gap-1.5"><Label>Phone</Label><Input value={form.phoneNumbers.join(", ")} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="+91 9400920044, +91 9876543210" /></div>
           <div className="flex flex-col gap-1.5"><Label>Email</Label><Input value={form.email} onChange={(e) => handleChange("email", e.target.value)} /></div>
-          <div className="flex flex-col gap-1.5"><Label>Address</Label><Input value={form.address} onChange={(e) => handleChange("address", e.target.value)} /></div>
-          <div className="flex flex-col gap-1.5"><Label>City</Label><Input value={form.city} onChange={(e) => handleChange("city", e.target.value)} /></div>
-          <div className="flex flex-col gap-1.5"><Label>State</Label><Input value={form.state} onChange={(e) => handleChange("state", e.target.value)} /></div>
-          <div className="flex flex-col gap-1.5"><Label>ZIP</Label><Input value={form.zip} onChange={(e) => handleChange("zip", e.target.value)} /></div>
+          <div className="flex flex-col gap-1.5"><Label>Location</Label><Input value={form.location} onChange={(e) => handleChange("location", e.target.value)} /></div>
+          <div className="flex flex-col gap-1.5"><Label>Map URL</Label><Input value={form.mapUrl} onChange={(e) => handleChange("mapUrl", e.target.value)} placeholder="https://www.google.com/maps/..." /></div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Status</Label>
+            <Select value={form.status} onValueChange={(v) => handleChange("status", v as BranchStatus)}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
