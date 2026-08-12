@@ -1,4 +1,4 @@
-import { BANNER_STATUS, BannerStatus, BANNER_STATUS_VALUES } from "../models/Banner";
+import { BANNER_PRIMARY_BUTTON_LINK, BANNER_STATUS, BannerStatus, BANNER_STATUS_VALUES } from "../models/Banner";
 import { CreateBannerInput, UpdateBannerInput } from "../types/banner.types";
 
 function normalizeStatus(raw: unknown): BannerStatus {
@@ -7,51 +7,68 @@ function normalizeStatus(raw: unknown): BannerStatus {
   return BANNER_STATUS_VALUES.includes(s) ? s : BANNER_STATUS.ACTIVE;
 }
 
+function asString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function asOrder(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, Math.round(value));
+  const n = Number(asString(value).trim());
+  return Number.isFinite(n) && n >= 0 ? Math.round(n) : 0;
+}
+
+function asStatus(raw: unknown): BannerStatus {
+  if (typeof raw !== "string" || !raw.trim()) return BANNER_STATUS.ACTIVE;
+  const s = raw.trim() as BannerStatus;
+  return BANNER_STATUS_VALUES.includes(s) ? s : BANNER_STATUS.ACTIVE;
+}
+
 export function mapBodyToCreateBannerInput(
   body: Record<string, unknown>,
-  imageUrl?: string
+  image?: string
 ): CreateBannerInput {
-  const title =
-    (typeof body.title === "string" && body.title) ||
-    (typeof body.bannerTitle === "string" && body.bannerTitle) ||
-    "";
+  const explicitImage =
+    typeof body.image === "string" ? body.image : undefined;
 
-  const explicitUrl =
-    typeof body.imageUrl === "string" ? body.imageUrl : undefined;
-
-  const resolvedImageUrl = imageUrl?.trim()
-    ? imageUrl.trim()
-    : explicitUrl?.trim() ?? "";
+  const resolvedImage = image?.trim()
+    ? image.trim()
+    : explicitImage?.trim() ?? "";
 
   return {
-    title,
+    heading: asString(body.heading),
+    highlightedText: asString(body.highlightedText),
+    subtext: asString(body.subtext),
+    primaryButtonText: asString(body.primaryButtonText),
+    primaryButtonLink: BANNER_PRIMARY_BUTTON_LINK,
+    secondaryButtonText: asString(body.secondaryButtonText),
+    order: asOrder(body.order),
     status: normalizeStatus(body.status),
-    imageUrl: resolvedImageUrl,
+    image: resolvedImage,
   };
 }
 
 export function mapBodyToUpdateBannerInput(
   body: Record<string, unknown>,
-  imageUrl?: string
+  image?: string
 ): UpdateBannerInput {
-  const title =
-    (typeof body.title === "string" && body.title) ||
-    (typeof body.bannerTitle === "string" && body.bannerTitle) ||
-    "";
-
-  const explicitUrl =
-    typeof body.imageUrl === "string" ? body.imageUrl : undefined;
-
   const base: UpdateBannerInput = {
-    title,
-    status: normalizeStatus(body.status),
+    heading: asString(body.heading) || undefined,
+    highlightedText: asString(body.highlightedText),
+    subtext: asString(body.subtext),
+    primaryButtonText: asString(body.primaryButtonText),
+    secondaryButtonText: asString(body.secondaryButtonText),
+    order: asOrder(body.order),
+    status: asStatus(body.status),
   };
 
-  if (imageUrl?.trim()) {
-    return { ...base, imageUrl: imageUrl.trim() };
+  const explicitImage =
+    typeof body.image === "string" ? body.image : undefined;
+
+  if (image?.trim()) {
+    return { ...base, image: image.trim() };
   }
-  if (explicitUrl?.trim()) {
-    return { ...base, imageUrl: explicitUrl.trim() };
+  if (explicitImage?.trim()) {
+    return { ...base, image: explicitImage.trim() };
   }
 
   return base;

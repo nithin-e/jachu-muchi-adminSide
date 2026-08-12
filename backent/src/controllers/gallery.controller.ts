@@ -33,6 +33,40 @@ export const getAllGalleryInitial = async (
 };
 
 /**
+ * GET /api/gallery/:id
+ */
+export const getGalleryById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    if (typeof id !== "string" || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(StatusCode.BAD_REQUEST).json({
+        success: false,
+        message: MESSAGES.GALLERY.INVALID_ID,
+      });
+    }
+
+    const data = await GalleryModel.findById(id);
+    if (!data) {
+      return res.status(StatusCode.NOT_FOUND).json({
+        success: false,
+        message: MESSAGES.GALLERY.NOT_FOUND,
+      });
+    }
+
+    return res.status(StatusCode.OK).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
  * Filtering endpoint:
  * GET /api/gallery/filter
  * Supports: page, limit, search, status, type, sortBy, order
@@ -177,7 +211,7 @@ export const createGallery = async (
         });
     }
 
-    if (!imageInput) {
+    if (!imageInput && !req.file) {
         return res.status(StatusCode.BAD_REQUEST).json({
             success: false,
             message: MESSAGES.GALLERY.IMAGE_REQUIRED,
@@ -188,7 +222,7 @@ export const createGallery = async (
 
     if (req.file) {
         imageUrl = `${galleryUploadPublicPath}/${req.file.filename}`;
-    } else if (imageInput.startsWith("data:image")) {
+    } else if (imageInput?.startsWith("data:image")) {
         const match = imageInput.match(/^data:image\/(\w+);base64,(.+)$/);
         if (!match) {
             return res.status(StatusCode.BAD_REQUEST).json({

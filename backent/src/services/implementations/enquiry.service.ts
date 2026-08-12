@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import {
   ENQUIRY_STATUS_VALUES,
-  ENQUIRY_TYPE_VALUES,
   EnquiryStatus,
   IEnquiryDocument,
   EnquiryType,
@@ -58,10 +57,19 @@ export class EnquiryService implements IEnquiryService {
           MESSAGES.ENQUIRY.TYPE_MUST_BE_VALID_ENQUIRY_TYPE
         );
       }
-      if (!ENQUIRY_TYPE_VALUES.includes(type as EnquiryType)) {
+      const TYPE_ALIASES: Record<string, EnquiryType> = {
+        course: "course_enquiry",
+        "course enquiry": "course_enquiry",
+        course_enquiry: "course_enquiry",
+        general: "general",
+        "normal enquiry": "general",
+      };
+      const aliasKey = type.trim().toLowerCase();
+      const mappedType = TYPE_ALIASES[aliasKey];
+      if (!mappedType) {
         throwBadRequest(MESSAGES.ENQUIRY.INVALID_TYPE_VALUE);
       }
-      normalizedType = type as EnquiryType;
+      normalizedType = mappedType;
     }
 
     const safeSortBy =
@@ -136,9 +144,8 @@ export class EnquiryService implements IEnquiryService {
 
     const emailPayload: EnquiryPayload = {
       fullName: updated.name,
-      emailOrPhone: updated.email || updated.phone,
-      email: updated.email || undefined,
-      phone: updated.phone || undefined,
+      email: updated.email,
+      phone: updated.phone,
       course: updated.course,
       message: updated.message,
       notes: trimmed,

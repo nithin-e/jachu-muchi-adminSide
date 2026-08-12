@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
-import { BANNER_STATUS_VALUES, BannerStatus, IBannerDocument } from "../../models/Banner";
+import { BANNER_PRIMARY_BUTTON_LINK, BANNER_STATUS_VALUES, BannerStatus, IBannerDocument } from "../../models/Banner";
 import { IBannerRepository } from "../../repositories/interfaces/IBannerRepository";
-import { CreateBannerInput, UpdateBannerInput } from "../../types/banner.types";
+import { CreateBannerInput, UpdateBannerInput, PublicBanner } from "../../types/banner.types";
 import { throwBadRequest, throwNotFound } from "../../utils/http-errors.helper";
 import { IBannerService } from "../interfaces/IBannerService";
 import { MESSAGES } from "../../constants/messages";
@@ -41,7 +41,7 @@ export class BannerService implements IBannerService {
       throwNotFound(MESSAGES.BANNER.NOT_FOUND);
     }
 
-    const payload = this.normalizeAndValidateUpdate(input, existing.imageUrl);
+    const payload = this.normalizeAndValidateUpdate(input, existing.image);
 
     const updated = await this.bannerRepository.updateById(bannerId, payload);
     if (!updated) {
@@ -49,12 +49,12 @@ export class BannerService implements IBannerService {
     }
 
     if (
-      payload.imageUrl !== undefined &&
-      existing.imageUrl &&
-      updated.imageUrl &&
-      updated.imageUrl !== existing.imageUrl
+      payload.image !== undefined &&
+      existing.image &&
+      updated.image &&
+      updated.image !== existing.image
     ) {
-      tryRemoveBannerImageFile(existing.imageUrl);
+      tryRemoveBannerImageFile(existing.image);
     }
 
     return updated;
@@ -70,7 +70,7 @@ export class BannerService implements IBannerService {
       throwNotFound(MESSAGES.BANNER.NOT_FOUND);
     }
 
-    tryRemoveBannerImageFile(removed.imageUrl);
+    tryRemoveBannerImageFile(removed.image);
   }
 
   async getBannerById(bannerId: string): Promise<IBannerDocument> {
@@ -84,6 +84,29 @@ export class BannerService implements IBannerService {
     }
 
     return doc;
+  }
+
+  async getActiveBanners(): Promise<PublicBanner[]> {
+    const docs = await this.bannerRepository.findActive();
+
+    return docs.map((doc) => {
+      const raw = doc.toObject();
+      const image = String(raw.image ?? "");
+      return {
+        id: String(raw._id),
+        heading: String(raw.heading ?? ""),
+        highlightedText: String(raw.highlightedText ?? ""),
+        subtext: String(raw.subtext ?? ""),
+        primaryButtonText: String(raw.primaryButtonText ?? ""),
+        primaryButtonLink: String(raw.primaryButtonLink || BANNER_PRIMARY_BUTTON_LINK),
+        secondaryButtonText: String(raw.secondaryButtonText ?? ""),
+        order: Number(raw.order ?? 0),
+        isActive: raw.status === "Active",
+        image,
+        imageUrl: image,
+        status: raw.status === "Inactive" ? "Inactive" : "Active",
+      };
+    });
   }
 
   async toggleStatus(bannerId: string): Promise<IBannerDocument> {
@@ -108,46 +131,68 @@ export class BannerService implements IBannerService {
   private normalizeAndValidateCreate(
     input: CreateBannerInput
   ): CreateBannerInput {
-    const title = input.title?.trim() ?? "";
+    const heading = input.heading?.trim() ?? "";
     const status = input.status;
-    const imageUrl = input.imageUrl?.trim() ?? "";
+    const image = input.image?.trim() ?? "";
+    const order = this.normalizeOrder(input.order);
 
-    if (!title) throwBadRequest(MESSAGES.BANNER.TITLE_REQUIRED);
+    if (!heading) throwBadRequest(MESSAGES.BANNER.HEADING_REQUIRED);
     if (!BANNER_STATUS_VALUES.includes(status)) {
       throwBadRequest(MESSAGES.BANNER.STATUS_MUST_BE_ACTIVE_OR_INACTIVE);
     }
-    if (!imageUrl) {
+    if (!image) {
       throwBadRequest(MESSAGES.BANNER.IMAGE_REQUIRED);
     }
 
-    return { title, status, imageUrl };
+    return {
+      heading,
+      highlightedText: input.highlightedText?.trim() ?? "",
+      subtext: input.subtext?.trim() ?? "",
+      primaryButtonText: input.primaryButtonText?.trim() ?? "",
+      primaryButtonLink: BANNER_PRIMARY_BUTTON_LINK,
+      secondaryButtonText: input.secondaryButtonText?.trim() ?? "",
+      order,
+      status,
+      image,
+    };
   }
 
   private normalizeAndValidateUpdate(
     input: UpdateBannerInput,
-    existingImageUrl: string
+    existingImage: string
   ): UpdateBannerInput {
-    const title = input.title?.trim();
-    const status = input.status;
+    const heading = input.heading?.trim();
 
-    if (title !== undefined && !title) throwBadRequest(MESSAGES.BANNER.TITLE_REQUIRED);
-    if (status !== undefined && !BANNER_STATUS_VALUES.includes(status)) {
+    if (heading !== undefined && !heading) throwBadRequest(MESSAGES.BANNER.HEADING_REQUIRED);
+    if (input.status !== undefined && !BANNER_STATUS_VALUES.includes(input.status)) {
       throwBadRequest(MESSAGES.BANNER.STATUS_MUST_BE_ACTIVE_OR_INACTIVE);
     }
 
     const out: UpdateBannerInput = {};
 
-    if (title !== undefined) out.title = title;
-    if (status !== undefined) out.status = status;
+    if (heading !== undefined) out.heading = heading;
+    if (input.highlightedText !== undefined) out.highlightedText = input.highlightedText.trim();
+    if (input.subtext !== undefined) out.subtext = input.subtext.trim();
+    if (input.primaryButtonText !== undefined) out.primaryButtonText = input.primaryButtonText.trim();
+    if (input.secondaryButtonText !== undefined) out.secondaryButtonText = input.secondaryButtonText.trim();
+    if (input.order !== undefined) out.order = this.normalizeOrder(input.order);
+    if (input.status !== undefined) out.status = input.status;
 
-    if (input.imageUrl !== undefined) {
-      const next = input.imageUrl?.trim() || undefined;
-      if (!next && !existingImageUrl) {
+    if (input.image !== undefined) {
+      const next = input.image?.trim() || undefined;
+      if (!next && !existingImage) {
         throwBadRequest(MESSAGES.BANNER.IMAGE_REQUIRED);
       }
-      out.imageUrl = next ?? existingImageUrl;
+      out.image = next ?? existingImage;
     }
 
     return out;
+  }
+
+  private normalizeOrder(value: number): number {
+    if (!Number.isFinite(value) || value < 0) {
+      throwBadRequest(MESSAGES.BANNER.INVALID_ORDER);
+    }
+    return Math.round(value);
   }
 }

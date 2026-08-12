@@ -16,7 +16,7 @@ export class ArticleRepository implements IArticleRepository {
     const doc = new ArticleModel({
       title: payload.title,
       description: payload.description,
-      category: payload.category,
+      ...(payload.category ? { category: payload.category } : {}),
       details: payload.details,
       articleDate: payload.articleDate,
       status: payload.status,
@@ -36,7 +36,7 @@ export class ArticleRepository implements IArticleRepository {
     const set: Record<string, unknown> = {
       title: payload.title,
       description: payload.description,
-      category: payload.category,
+      ...(payload.category ? { category: payload.category } : {}),
       details: payload.details,
       articleDate: payload.articleDate,
       status: payload.status,

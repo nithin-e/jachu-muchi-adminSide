@@ -4,6 +4,8 @@ export interface CreateAlumniInput {
   company: string;
   place: string;
   profileImageUrl?: string;
+  batch?: string;
+  description?: string;
 }
 
 /** Omitting `profileImageUrl` keeps the existing image on update. */
@@ -13,4 +15,6 @@ export interface UpdateAlumniInput {
   company: string;
   place: string;
   profileImageUrl?: string;
+  batch?: string;
+  description?: string;
 }

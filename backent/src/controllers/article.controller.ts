@@ -117,6 +117,34 @@ export class ArticleController {
       return next(error);
     }
   }
+  /**
+   * Standalone upload: stores the file under /uploads/articles and returns its public URL.
+   */
+  async uploadImage(req: Request, res: Response, next: NextFunction){
+    try {
+      if (!req.file) {
+        return res.status(StatusCode.BAD_REQUEST).json({
+          success: false,
+          message: MESSAGES.UPLOAD.NO_FILE,
+        });
+      }
+
+      const filePath = `${articleUploadPublicPath}/${path.basename(req.file.filename)}`;
+
+      return res.status(StatusCode.CREATED).json({
+        success: true,
+        message: MESSAGES.UPLOAD.SUCCESS,
+        data: {
+          filename: req.file.filename,
+          filePath,
+          mimetype: req.file.mimetype,
+          size: req.file.size,
+        },
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
   async getById(req: Request, res: Response, next: NextFunction){
     try {
       const { id } = req.params;

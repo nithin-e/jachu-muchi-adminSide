@@ -15,11 +15,11 @@ export const ENQUIRY_STATUS_VALUES: EnquiryStatus[] = [
   "Closed",
 ];
 
-export type EnquiryType = "Course Enquiry" | "Normal Enquiry";
+export type EnquiryType = "course_enquiry" | "general";
 
 export const ENQUIRY_TYPE_VALUES: EnquiryType[] = [
-  "Course Enquiry",
-  "Normal Enquiry",
+  "course_enquiry",
+  "general",
 ];
 
 export interface IEnquiryDocument extends Document {
@@ -45,7 +45,7 @@ const enquirySchema = new Schema<IEnquiryDocument>(
     type: {
       type: String,
       enum: ENQUIRY_TYPE_VALUES,
-      default: "Course Enquiry",
+      default: "general",
     },
     status: {
       type: String,

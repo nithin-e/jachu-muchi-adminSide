@@ -1,12 +1,12 @@
 export interface EnquiryPayload {
   fullName: string;
-  emailOrPhone: string;
+  email: string;
+  phone: string;
   course: string;
   name?: string;
-  email?: string;
-  phone?: string;
   message: string;
-  subject?: string; 
+  subject?: string;
+  type?: "course_enquiry" | "general";
   notes?: string;
 }
 
@@ -16,6 +16,4 @@ export interface MailDispatchResult {
   failedTo: string[];
   message: string;
 }
-
-// src/types/enquiry.ts
 

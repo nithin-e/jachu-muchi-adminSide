@@ -12,23 +12,41 @@ export const BANNER_STATUS_VALUES: BannerStatus[] = [
   BANNER_STATUS.INACTIVE,
 ];
 
+export const BANNER_PRIMARY_BUTTON_LINK = "/courses";
+
 export interface IBannerDocument extends Document {
-  title: string;
+  heading: string;
+  highlightedText: string;
+  subtext: string;
+  primaryButtonText: string;
+  primaryButtonLink: string;
+  secondaryButtonText: string;
+  order: number;
   status: BannerStatus;
-  imageUrl: string;
+  image: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const bannerSchema = new Schema<IBannerDocument>(
   {
-    title: { type: String, required: true, trim: true },
+    heading: { type: String, default: "", trim: true },
+    highlightedText: { type: String, default: "", trim: true },
+    subtext: { type: String, default: "", trim: true },
+    primaryButtonText: { type: String, default: "", trim: true },
+    primaryButtonLink: {
+      type: String,
+      default: BANNER_PRIMARY_BUTTON_LINK,
+      trim: true,
+    },
+    secondaryButtonText: { type: String, default: "", trim: true },
+    order: { type: Number, default: 0 },
     status: {
       type: String,
       enum: BANNER_STATUS_VALUES,
       default: BANNER_STATUS.ACTIVE,
     },
-    imageUrl: { type: String, required: true, trim: true },
+    image: { type: String, required: true, trim: true },
   },
   { timestamps: true }
 );

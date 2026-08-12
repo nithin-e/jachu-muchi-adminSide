@@ -15,46 +15,65 @@ export class OutreachController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const { fullName, emailOrPhone, course, message } =
+      const { fullName, email, phone, course, subject, type, message } =
         req.body as EnquiryPayload;
 
       console.log(
         "[OutreachController] Incoming enquiry:",
-        { fullName, emailOrPhone, course, message }
+        { fullName, email, phone, course, subject, type, message }
       );
 
       // ── Basic presence validation ────────────────────────────────────
-      if (!fullName?.trim() || !emailOrPhone?.trim() || !message?.trim()) {
+      if (
+        !fullName?.trim() ||
+        !email?.trim() ||
+        !phone?.trim() ||
+        !message?.trim()
+      ) {
         res.status(400).json({
           success: false,
-          message: "fullName, emailOrPhone, and message are required fields.",
+          message: "fullName, email, phone, and message are required fields.",
         });
         return;
       }
 
-      // ── Email / phone format validation ──────────────────────────────
+      // ── Email format validation ──────────────────────────────────────
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const phoneRegex = /^\d{10,15}$/;
-      const isValidEmail = emailRegex.test(emailOrPhone.trim());
-      const isValidPhone = phoneRegex.test(emailOrPhone.trim().replace(/\D/g, ""));
-
-      if (!isValidEmail && !isValidPhone) {
+      if (!emailRegex.test(email.trim())) {
         res.status(400).json({
           success: false,
-          message: "Please provide a valid email address or phone number.",
+          message: "Please provide a valid email address.",
         });
         return;
       }
 
-      const email = isValidEmail ? emailOrPhone.trim().toLowerCase() : "";
-      const phone = isValidPhone ? emailOrPhone.trim().replace(/\D/g, "") : "";
+      // ── Phone format validation (allow international format with +) ──
+      const normalizedPhone = phone.trim().replace(/[\s().-]/g, "");
+      const phoneRegex = /^\+?\d{7,15}$/;
+      if (!phoneRegex.test(normalizedPhone)) {
+        res.status(400).json({
+          success: false,
+          message: "Please provide a valid phone number (e.g. +919876543210).",
+        });
+        return;
+      }
+
+      const subjectOrCourse = course?.trim() || subject?.trim() || "N/A";
+      const rawType = typeof type === "string" ? type.trim() : "";
+      const normalizedType: "course_enquiry" | "general" =
+        rawType === "course_enquiry" || rawType === "general"
+          ? rawType
+          : course?.trim()
+            ? "course_enquiry"
+            : "general";
 
       const enquiryPayload = {
         name: fullName.trim(),
-        phone: phone || "N/A",
-        email,
-        course: course?.trim() || "N/A",
+        phone: normalizedPhone,
+        email: email.trim().toLowerCase(),
+        course: subjectOrCourse,
         message: message.trim(),
+        type: normalizedType,
       };
 
       // ── Save enquiry to database ─────────────────────────────────────
@@ -67,9 +86,11 @@ export class OutreachController {
 
       const mailPayload: EnquiryPayload = {
         fullName: enquiryPayload.name,
-        emailOrPhone: enquiryPayload.email || enquiryPayload.phone,
-        email: enquiryPayload.email || undefined,
+        email: enquiryPayload.email,
+        phone: enquiryPayload.phone,
         course: enquiryPayload.course,
+        subject: subjectOrCourse,
+        type: enquiryPayload.type,
         message: enquiryPayload.message,
       };
 

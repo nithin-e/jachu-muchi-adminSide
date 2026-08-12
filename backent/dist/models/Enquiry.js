@@ -43,8 +43,8 @@ exports.ENQUIRY_STATUS_VALUES = [
     "Closed",
 ];
 exports.ENQUIRY_TYPE_VALUES = [
-    "Course Enquiry",
-    "Normal Enquiry",
+    "course_enquiry",
+    "general",
 ];
 const enquirySchema = new mongoose_1.Schema({
     name: { type: String, required: true, trim: true },
@@ -55,7 +55,7 @@ const enquirySchema = new mongoose_1.Schema({
     type: {
         type: String,
         enum: exports.ENQUIRY_TYPE_VALUES,
-        default: "Course Enquiry",
+        default: "general",
     },
     status: {
         type: String,

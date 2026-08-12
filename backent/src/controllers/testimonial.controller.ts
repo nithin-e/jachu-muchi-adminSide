@@ -139,15 +139,15 @@ export class TestimonialController {
   async create(req: Request, res: Response, next: NextFunction){
     try {
       const file = req.file;
-      let profileImageUrl: string | undefined;
+      let avatarUrl: string | undefined;
 
       if (file?.filename) {
-        profileImageUrl = `${testimonialUploadPublicPath}/${path.basename(file.filename)}`;
+        avatarUrl = `${testimonialUploadPublicPath}/${path.basename(file.filename)}`;
       }
 
       const payload = mapBodyToCreateTestimonialInput(
         req.body as Record<string, unknown>,
-        profileImageUrl
+        avatarUrl
       );
 
       const data = await this.testimonialService.createTestimonial(payload);
@@ -172,15 +172,15 @@ export class TestimonialController {
       }
 
       const file = req.file;
-      let profileImageUrl: string | undefined;
+      let avatarUrl: string | undefined;
 
       if (file?.filename) {
-        profileImageUrl = `${testimonialUploadPublicPath}/${path.basename(file.filename)}`;
+        avatarUrl = `${testimonialUploadPublicPath}/${path.basename(file.filename)}`;
       }
 
       const payload = mapBodyToUpdateTestimonialInput(
         req.body as Record<string, unknown>,
-        profileImageUrl
+        avatarUrl
       );
 
       const data = await this.testimonialService.updateTestimonial(id, payload);

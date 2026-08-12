@@ -58,7 +58,10 @@ export function mapBodyToCreateArticleInput(
   const status = normalizeStatus(body.status) ?? ARTICLE_STATUS.DRAFT;
 
   const explicitUrl =
-    typeof body.imageUrl === "string" ? body.imageUrl : undefined;
+    typeof body.imageUrl === "string" &&
+    !body.imageUrl.trim().startsWith("data:")
+      ? body.imageUrl
+      : undefined;
 
   return {
     title,

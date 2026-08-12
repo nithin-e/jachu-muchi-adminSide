@@ -3,7 +3,7 @@ import { ArticleStatus } from "../models/Article";
 export interface CreateArticleInput {
   title: string;
   description: string;
-  category: string;
+  category?: string;
   details: string;
   articleDate: Date;
   status: ArticleStatus;
@@ -14,7 +14,7 @@ export interface CreateArticleInput {
 export interface UpdateArticleInput {
   title: string;
   description: string;
-  category: string;
+  category?: string;
   details: string;
   articleDate: Date;
   status: ArticleStatus;

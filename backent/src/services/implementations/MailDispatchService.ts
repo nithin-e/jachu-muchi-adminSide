@@ -143,8 +143,12 @@ export class MailDispatchService implements IMailDispatchService {
             <td style="padding: 8px; color: #333;">${this.escape(payload.fullName)}</td>
           </tr>
           <tr style="background: #f9f9f9;">
-            <td style="padding: 8px; font-weight: bold; color: #555;">Email or Phone</td>
-            <td style="padding: 8px; color: #333;">${this.escape(payload.emailOrPhone)}</td>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Email</td>
+            <td style="padding: 8px; color: #333;">${this.escape(payload.email)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Phone</td>
+            <td style="padding: 8px; color: #333;">${this.escape(payload.phone)}</td>
           </tr>
           <tr>
             <td style="padding: 8px; font-weight: bold; color: #555;">Course</td>
@@ -190,8 +194,12 @@ export class MailDispatchService implements IMailDispatchService {
             <td style="padding: 8px; color: #333;">${this.escape(payload.fullName)}</td>
           </tr>
           <tr style="background: #f9f9f9;">
-            <td style="padding: 8px; font-weight: bold; color: #555;">Email or Phone</td>
-            <td style="padding: 8px; color: #333;">${this.escape(payload.emailOrPhone)}</td>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Email</td>
+            <td style="padding: 8px; color: #333;">${this.escape(payload.email)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; font-weight: bold; color: #555;">Phone</td>
+            <td style="padding: 8px; color: #333;">${this.escape(payload.phone)}</td>
           </tr>
           <tr>
             <td style="padding: 8px; font-weight: bold; color: #555;">Course</td>

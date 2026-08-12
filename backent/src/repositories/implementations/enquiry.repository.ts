@@ -38,7 +38,7 @@ function scoreValue(value: string, normalizedSearch: string): number {
 }
 
 function scoreDocument(doc: IEnquiryDocument, normalizedSearch: string): number {
-  const searchableValues = [doc.name, doc.phone, doc.email, doc.type, doc.message];
+  const searchableValues = [doc.name, doc.phone, doc.email, doc.course, doc.type, doc.message];
   let max = 0;
   for (const value of searchableValues) {
     const score = scoreValue(String(value ?? ""), normalizedSearch);
@@ -55,7 +55,7 @@ export class EnquiryRepository implements IEnquiryRepository {
       email: payload.email,
       course: payload.course,
       message: payload.message,
-      type: payload.type || "Normal Enquiry",
+      type: payload.type || "general",
       status: payload.status || "New",
     });
     return doc.save();

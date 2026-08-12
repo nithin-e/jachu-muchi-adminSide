@@ -11,6 +11,11 @@ router.get("/filter", articleController.filterArticles.bind(articleController));
 router.get("/stats", articleController.stats.bind(articleController));
 router.get("/:id", articleController.getById.bind(articleController));
 router.post(
+  "/upload",
+  articleUploadMiddleware.handle.bind(articleUploadMiddleware),
+  articleController.uploadImage.bind(articleController)
+);
+router.post(
   "/",
   articleUploadMiddleware.handle.bind(articleUploadMiddleware),
   articleController.create.bind(articleController)

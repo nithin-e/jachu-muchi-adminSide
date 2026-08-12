@@ -29,11 +29,19 @@ export function mapBodyToCreateAlumniInput(
   const explicitUrl =
     typeof body.profileImageUrl === "string" ? body.profileImageUrl : undefined;
 
+  const batch =
+    typeof body.batch === "string" ? body.batch.trim() : undefined;
+
+  const description =
+    typeof body.description === "string" ? body.description.trim() : undefined;
+
   return {
     name,
     role,
     company,
     place,
+    ...(batch !== undefined ? { batch } : {}),
+    ...(description !== undefined ? { description } : {}),
     ...(profileImageUrl
       ? { profileImageUrl }
       : explicitUrl?.trim()

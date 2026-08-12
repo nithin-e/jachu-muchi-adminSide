@@ -40,7 +40,7 @@ function scoreValue(value: string, normalizedSearch: string): number {
 }
 
 function scoreDocument(doc: ITestimonialDocument, normalizedSearch: string): number {
-  const searchableValues = [doc.name, doc.course, doc.message];
+  const searchableValues = [doc.name, doc.role, doc.content];
   let max = 0;
   for (const value of searchableValues) {
     const score = scoreValue(String(value ?? ""), normalizedSearch);
@@ -55,10 +55,11 @@ export class TestimonialRepository implements ITestimonialRepository {
   ): Promise<ITestimonialDocument> {
     const doc = new TestimonialModel({
       name: payload.name,
-      course: payload.course,
-      message: payload.message,
-      ...(payload.profileImageUrl
-        ? { profileImageUrl: payload.profileImageUrl }
+      role: payload.role,
+      content: payload.content,
+      status: payload.status,
+      ...(payload.avatarUrl
+        ? { avatarUrl: payload.avatarUrl }
         : {}),
     });
     return doc.save();
@@ -74,11 +75,12 @@ export class TestimonialRepository implements ITestimonialRepository {
   ): Promise<ITestimonialDocument | null> {
     const set: Record<string, unknown> = {
       name: payload.name,
-      course: payload.course,
-      message: payload.message,
+      role: payload.role,
+      content: payload.content,
+      status: payload.status,
     };
-    if (payload.profileImageUrl !== undefined) {
-      set.profileImageUrl = payload.profileImageUrl;
+    if (payload.avatarUrl !== undefined) {
+      set.avatarUrl = payload.avatarUrl;
     }
     return TestimonialModel.findByIdAndUpdate(id, { $set: set }, { new: true });
   }
